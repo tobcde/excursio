@@ -4,13 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Excursionistas - Gestion</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a7a3c">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Excursionistas">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -25,26 +18,26 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
 
-/* â”€â”€ LOGIN â”€â”€ */
+/* ── LOGIN ── */
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:3000;display:flex;align-items:center;justify-content:center;}
 .login-card{background:var(--surface2);padding:40px;border-radius:16px;border:2px solid var(--verde);text-align:center;width:90%;max-width:380px;box-shadow:0 0 40px var(--verde-glow);}
 .login-escudo{width:80px;height:80px;object-fit:contain;background:white;border-radius:8px;padding:6px;margin-bottom:16px;}
 .login-card input{width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;margin-bottom:15px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;}
 .login-card input:focus{outline:none;border-color:var(--verde);}
 
-/* â”€â”€ HEADER â”€â”€ */
+/* ── HEADER ── */
 .logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:10px;}
 .logo span{color:var(--dorado);}
 .logo img{width:36px;height:36px;object-fit:contain;background:white;border-radius:5px;padding:2px;}
 header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
 
-/* â”€â”€ TABS â”€â”€ */
+/* ── TABS ── */
 .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
 .tab{font-family:'Barlow Condensed',sans-serif;padding:15px 22px;cursor:pointer;color:var(--muted);border:none;background:none;text-transform:uppercase;border-bottom:3px solid transparent;font-size:13px;letter-spacing:.05em;white-space:nowrap;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--dorado);border-bottom-color:var(--dorado);background:var(--dorado-dim);}
 
-/* â”€â”€ FILTROS / FORMS â”€â”€ */
+/* ── FILTROS / FORMS ── */
 .filters-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:15px 20px;}
 .filters-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
 .filter-group{display:flex;flex-direction:column;gap:4px;}
@@ -52,12 +45,12 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .filter-select,.edit-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;font-size:12px;outline:none;font-family:'Barlow',sans-serif;}
 .filter-select:focus,.edit-input:focus{border-color:var(--verde);}
 
-/* â”€â”€ STATS BAR â”€â”€ */
+/* ── STATS BAR ── */
 .stats{display:flex;gap:25px;padding:15px 20px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap;}
 .stat-n{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--dorado);}
 .stat-l{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-left:6px;}
 
-/* â”€â”€ GRID JUGADORES â”€â”€ */
+/* ── GRID JUGADORES ── */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;padding:20px;}
 .card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;cursor:pointer;padding:20px;position:relative;transition:all .2s;border-left:6px solid transparent;}
 .card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.5);border-color:var(--verde);}
@@ -74,7 +67,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .cuota-none{background:var(--surface);color:var(--muted);border:1px solid var(--border);}
 .cuota-vence{background:var(--dorado-dim);color:var(--dorado-lite);border:1px solid var(--dorado-border);}
 
-/* â”€â”€ ASISTENCIAS â”€â”€ */
+/* ── ASISTENCIAS ── */
 .asist-container{padding:25px;max-width:1000px;margin:0 auto;}
 .asist-selector{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;background:var(--surface2);padding:20px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
 .asist-lista{background:var(--surface2);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
@@ -98,7 +91,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .asist-search-bar input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;font-size:12px;outline:none;font-family:'Barlow',sans-serif;}
 .asist-search-bar input:focus{border-color:var(--verde);}
 
-/* â”€â”€ CUOTAS â”€â”€ */
+/* ── CUOTAS ── */
 .cuotas-container{padding:20px;max-width:1200px;margin:0 auto;}
 .cuotas-topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--surface2);padding:18px 20px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
 .cuotas-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
@@ -115,7 +108,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .ct-nombre{font-weight:700;font-size:13px;text-transform:uppercase;font-family:'Barlow Condensed';}
 .ct-sub{font-size:11px;color:var(--muted);margin-top:2px;}
 
-/* â”€â”€ ADMIN â”€â”€ */
+/* ── ADMIN ── */
 .admin-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:25px;padding:25px;}
 .admin-card{background:var(--surface2);padding:20px;border-radius:12px;border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;}
 .admin-title{font-family:'Barlow Condensed';color:var(--dorado);font-size:18px;font-weight:800;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;}
@@ -123,7 +116,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .item-row{display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:6px;margin-bottom:6px;font-size:13px;}
 .item-row:hover{background:var(--surface);}
 
-/* â”€â”€ MODAL â”€â”€ */
+/* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);width:100%;max-width:900px;border-radius:15px;max-height:95vh;overflow-y:auto;border:1px solid var(--verde);}
@@ -154,7 +147,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .hist-dot.p{background:var(--verde-dim);color:#6de097;border:1px solid var(--verde-border);}
 .hist-dot.a{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);}
 
-/* â”€â”€ BOTONES â”€â”€ */
+/* ── BOTONES ── */
 .btn{padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:700;font-family:'Barlow Condensed';border:none;text-transform:uppercase;font-size:12px;transition:all .2s;letter-spacing:.05em;}
 .btn-save{background:var(--verde);color:white;}
 .btn-save:hover{background:var(--verde-dark);}
@@ -170,7 +163,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .btn-tel{padding:5px 10px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;color:white;display:inline-flex;align-items:center;gap:4px;background:var(--verde);}
 .btn-wa{padding:5px 10px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;color:white;display:inline-flex;align-items:center;gap:4px;background:#25D366;}
 
-/* â”€â”€ LOADER â”€â”€ */
+/* ── LOADER ── */
 #loader{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:4000;}
 .spinner{width:50px;height:50px;border:4px solid var(--surface2);border-top-color:var(--verde);border-radius:50%;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -178,7 +171,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
 .empty-state p{font-family:'Barlow Condensed';font-size:16px;text-transform:uppercase;margin-top:10px;}
 
-/* â”€â”€ CONFIG PERIODOS â”€â”€ */
+/* ── CONFIG PERIODOS ── */
 .config-pagos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px;margin-top:15px;}
 .periodo-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;}
 .periodo-card.activo{border-color:var(--verde);}
@@ -220,7 +213,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
          alt="CAE" onerror="this.style.display='none'">
     EXCURSIONISTAS <span>FC</span>
   </div>
-  <button class="btn btn-secondary" onclick="inicializar()">âŸ³ RECARGAR</button>
+  <button class="btn btn-secondary" onclick="inicializar()">⟳ RECARGAR</button>
 </header>
 
 <!-- TABS -->
@@ -231,7 +224,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   <div class="tab" onclick="cambiarTab(event,'admin')">ADMINISTRACION</div>
 </div>
 
-<!-- â•â• TAB SOCIOS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══ TAB SOCIOS ══════════════════════════════════════ -->
 <div id="tab-jugadores" class="tab-content">
   <div class="filters-bar"><div class="filters-row">
     <div class="filter-group" style="flex:1;min-width:140px;"><label class="filter-label">Buscador</label>
@@ -259,13 +252,13 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   <div id="gridJugadores" class="grid"></div>
 </div>
 
-<!-- â•â• TAB ASISTENCIAS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══ TAB ASISTENCIAS ════════════════════════════════ -->
 <div id="tab-asistencias" class="tab-content" style="display:none;">
   <div class="asist-container">
     <div class="asist-selector">
       <div class="filter-group"><label class="filter-label">Fecha</label><input type="date" id="asistFecha" class="filter-select"></div>
       <div class="filter-group"><label class="filter-label">Turno</label>
-        <select id="asistTurno" class="filter-select"><option value="">-- Sin turno especÃ­fico --</option></select></div>
+        <select id="asistTurno" class="filter-select"><option value="">-- Sin turno específico --</option></select></div>
       <div class="filter-group"><label class="filter-label">Categoria</label>
         <select id="asistCat" class="filter-select"><option value="">Todas</option></select></div>
       <button class="btn btn-gold" onclick="cargarListaAsist()">CARGAR</button>
@@ -274,7 +267,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   </div>
 </div>
 
-<!-- â•â• TAB CUOTAS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══ TAB CUOTAS ══════════════════════════════════════ -->
 <div id="tab-cuotas" class="tab-content" style="display:none;">
   <div class="cuotas-container">
     <div class="cuotas-topbar">
@@ -309,7 +302,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   </div>
 </div>
 
-<!-- â•â• TAB ADMIN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══ TAB ADMIN ══════════════════════════════════════ -->
 <div id="tab-admin" class="tab-content" style="display:none;">
   <div class="admin-container">
     <div class="admin-card">
@@ -333,7 +326,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
     </div>
     <div class="admin-card" id="cardCat">
       <h3 class="admin-title">CATEGORIAS (por anio nac.)</h3>
-      <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Los anos son de nacimiento. Ej: para chicos nacidos entre 2010 y 2012 â†’ Desde 2010, Hasta 2012.</p>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Los anos son de nacimiento. Ej: para chicos nacidos entre 2010 y 2012 → Desde 2010, Hasta 2012.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <input type="text" id="cNom" class="edit-input" placeholder="Nombre cat.">
         <input type="color" id="cCol" value="#1a7a3c" style="width:100%;height:40px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--bg);">
@@ -358,7 +351,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
     </div>
     <div class="admin-card" style="grid-column:1/-1;">
       <h3 class="admin-title">CONFIG. PERIODOS DE PAGO</h3>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Define los periodos del anio. Por defecto arrancan el dia 1 y terminan el Ãºltimo dia del mes.</p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Define los periodos del anio. Por defecto arrancan el dia 1 y terminan el último dia del mes.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--bg);padding:15px;border-radius:8px;border:1px solid var(--border);">
         <div class="filter-group"><label class="filter-label">Mes</label>
           <select id="cpMes" class="filter-select">
@@ -370,9 +363,9 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
         <div class="filter-group"><label class="filter-label">Ano Inicio</label><input type="number" id="cpAnioD" class="filter-select" style="width:90px;" placeholder="2026"></div>
         <div class="filter-group"><label class="filter-label">Dia Inicio</label><input type="number" id="cpDiaD" class="filter-select" style="width:70px;" value="1" min="1" max="31"></div>
         <div class="filter-group"><label class="filter-label">Ano Fin</label><input type="number" id="cpAnioH" class="filter-select" style="width:90px;" placeholder="2026"></div>
-        <div class="filter-group"><label class="filter-label">Dia Fin</label><input type="number" id="cpDiaH" class="filter-select" style="width:70px;" value="0" min="0" max="31" title="0 = Ãºltimo dia del mes"></div>
+        <div class="filter-group"><label class="filter-label">Dia Fin</label><input type="number" id="cpDiaH" class="filter-select" style="width:70px;" value="0" min="0" max="31" title="0 = último dia del mes"></div>
         <div class="filter-group"><label class="filter-label">Dias Gracia</label><input type="number" id="cpGracia" class="filter-select" style="width:70px;" value="5" min="0"></div>
-        <div class="filter-group" style="flex:1;min-width:150px;"><label class="filter-label">DescripciÃ³n</label><input type="text" id="cpDesc" class="filter-select" placeholder="Ej: Cuota Marzo 2026"></div>
+        <div class="filter-group" style="flex:1;min-width:150px;"><label class="filter-label">Descripción</label><input type="text" id="cpDesc" class="filter-select" placeholder="Ej: Cuota Marzo 2026"></div>
         <button class="btn btn-save" onclick="agregarPeriodo()">+ AGREGAR</button>
         <button class="btn btn-orange" onclick="generarPeriodosAnio()">GENERAR ANO COMPLETO</button>
       </div>
@@ -382,7 +375,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   </div>
 </div>
 
-<!-- â•â• MODAL SOCIO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══ MODAL SOCIO ═══════════════════════════════════ -->
 <div class="modal-overlay" id="modalEdicion">
   <div class="modal">
     <div class="modal-header">
@@ -466,7 +459,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   </div>
 </div>
 
-<!-- â•â• MODAL PAGO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ══ MODAL PAGO ═════════════════════════════════════ -->
 <div class="modal-overlay" id="modalPago">
   <div class="modal" style="max-width:520px;">
     <div class="modal-header">
@@ -479,7 +472,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
         <div class="modal-field"><label class="modal-field-label">Monto $</label><input type="number" id="mp-monto" class="edit-input" placeholder="0"></div>
         <div class="modal-field"><label class="modal-field-label">Periodo Desde</label><input type="date" id="mp-desde" class="edit-input"></div>
         <div class="modal-field"><label class="modal-field-label">Periodo Hasta</label><input type="date" id="mp-hasta" class="edit-input"></div>
-        <div class="modal-field"><label class="modal-field-label">MÃ©todo</label>
+        <div class="modal-field"><label class="modal-field-label">Método</label>
           <select id="mp-metodo" class="edit-input"><option>Efectivo</option><option>Transferencia</option><option>Otro</option></select></div>
         <div class="modal-field"><label class="modal-field-label">Cobrador</label><select id="mp-cobrador" class="edit-input"></select></div>
         <div class="modal-field full"><label class="modal-field-label">Observaciones</label><input type="text" id="mp-obs" class="edit-input" placeholder="Opcional..."></div>
@@ -490,15 +483,38 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 </div>
 
 <script>
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
 // ESTADO GLOBAL
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════
+// ── URL DEL APPS SCRIPT (API) ─────────────────────────────
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw86r6IMSOdcU_mP3yPXg4Shspg84E3eF1RkXMfg4F_t1wFRciaI2KdjFv4_wKiO3TtBQ/exec';
+
+// ── JSONP helper — reemplaza google.script.run ─────────────
+function callScript(payload, onSuccess, onError) {
+  var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  var url = SCRIPT_URL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+  window[cb] = function(data) {
+    delete window[cb];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (data && data.error) { if(onError) onError(data.error); else alert('Error: ' + data.error); }
+    else { if(onSuccess) onSuccess(data); }
+  };
+  var script = document.createElement('script');
+  script.src = url;
+  script.onerror = function() {
+    delete window[cb];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if(onError) onError('Error de conexion');
+  };
+  document.head.appendChild(script);
+}
+
 var DB={jugadores:[],profesores:[],sedes:[],categorias:[],horarios:[],configPagos:[]};
 var CUOTAS_DB={planes:[],cuotas:[]};
 var TOKEN='',itemSel=null,catEditIdx=null,planEditIdx=null;
 var asistencias=[],asistActual={},pagoCtx=null,PERIODOS_EDIT=[];
 
-// â”€â”€ MAPEO DE COLUMNAS - Socios Excursionistas Futsal â”€â”€â”€â”€â”€â”€
+// ── MAPEO DE COLUMNAS - Socios Excursionistas Futsal ──────
 // La hoja tiene: Apellido(0), Nombre(1), Email(2), NumTarjeta(3),
 // Telefono(4), Celular(5), Activo(6), TipoDoc(7), DNI(8),
 // FechaNac(9), Sexo(10), Domicilio(11), Observaciones(12),
@@ -513,58 +529,32 @@ var COL = {
   FOTO:19, DNI_FOTO:20, APTO:21
 };
 
-// â”€â”€ INICIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── INICIO ────────────────────────────────────────────────
 function intentarLogin(){TOKEN=document.getElementById('passInput').value;if(!TOKEN)return alert('Ingresa la contrasena');inicializar();}
 function mostrarLoader(m){document.getElementById('loader').style.display='flex';document.getElementById('loader-msg').innerText=m;}
 function ocultarLoader(){document.getElementById('loader').style.display='none';}
 
 function inicializar(){
   if(!TOKEN)return;
-  // En GitHub Pages: redirigir a la URL real del Apps Script
-  if(typeof google === 'undefined' || !google.script) {
-    ocultarLoader();
-    var GAS_URL = 'https://script.google.com/macros/s/AKfycbx_Z4QzEAsY4r-5b_nvcdfz0TOqyOwaT9aro2c5VGEAgcPGFWW9-_8Z84f-WF8mtkre/exec';
-    window.location.href = GAS_URL;
-    return;
-  }
   mostrarLoader('Cargando socios...');
-  // Paso 1: cargar socios primero y mostrar la app de inmediato
-  google.script.run
-    .withSuccessHandler(function(raw){
-      var d=JSON.parse(raw);
-      if(d.error){alert(d.error);ocultarLoader();return;}
-      document.getElementById('login-screen').style.display='none';
-      DB=d;
-      // Mostrar jugadores de inmediato sin esperar asistencias/cuotas
-      renderPlayers();
-      poblarSelects();poblarTurnosAsist();poblarPeriodos();
-      renderList('listP',DB.profesores,'Profesores');
-      renderList('listS',DB.sedes,'Sedes');
-      renderListCat();renderHorarios();renderListPlanes();
-      PERIODOS_EDIT=DB.configPagos.map(function(r){return{mes:r[0],anioD:r[1],diaD:r[2],anioH:r[3],diaH:r[4],gracia:r[5],desc:r[6]};});
-      renderPeriodosAdmin();
-      document.getElementById('asistFecha').value=new Date().toISOString().split('T')[0];
-      ocultarLoader();
-      // Paso 2: cargar asistencias y cuotas en background (sin bloquear la UI)
-      document.getElementById('statD').title='Cargando cuotas...';
-      var pendientes=2;
-      function finCarga(){
-        if(--pendientes===0){
-          // Refrescar stats ahora que tenemos todo
-          renderPlayers();
-        }
-      }
-      google.script.run
-        .withSuccessHandler(function(r){asistencias=JSON.parse(r);finCarga();})
-        .withFailureHandler(function(){finCarga();})
-        .getAsistencias(TOKEN);
-      google.script.run
-        .withSuccessHandler(function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();finCarga();})
-        .withFailureHandler(function(){finCarga();})
-        .getCuotas(TOKEN);
-    })
-    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
-    .getData(TOKEN);
+  callScript({action:'getData', pass:TOKEN}, function(d){
+    if(d.error){alert(d.error);ocultarLoader();return;}
+    document.getElementById('login-screen').style.display='none';
+    DB=d;
+    renderPlayers();
+    poblarSelects();poblarTurnosAsist();poblarPeriodos();
+    renderList('listP',DB.profesores,'Profesores');
+    renderList('listS',DB.sedes,'Sedes');
+    renderListCat();renderHorarios();renderListPlanes();
+    PERIODOS_EDIT=DB.configPagos.map(function(r){return{mes:r[0],anioD:r[1],diaD:r[2],anioH:r[3],diaH:r[4],gracia:r[5],desc:r[6]};});
+    renderPeriodosAdmin();
+    document.getElementById('asistFecha').value=new Date().toISOString().split('T')[0];
+    ocultarLoader();
+    var pendientes=2;
+    function finCarga(){if(--pendientes===0){renderPlayers();}}
+    callScript({action:'getAsistencias', pass:TOKEN}, function(r){asistencias=JSON.parse(r);finCarga();}, function(){finCarga();});
+    callScript({action:'getCuotas', pass:TOKEN}, function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();finCarga();}, function(){finCarga();});
+  }, function(e){alert('Error: '+e);ocultarLoader();});
 }
 
 function renderAll(){
@@ -578,7 +568,7 @@ function renderAll(){
   document.getElementById('asistFecha').value=new Date().toISOString().split('T')[0];
 }
 
-// â”€â”€ HELPERS FECHA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── HELPERS FECHA ────────────────────────────────────────
 function parseDate(s){if(!s)return null;var str=s.toString();if(str.includes('/')){var p=str.split('/');return new Date(p[2],p[1]-1,p[0]);}var d=new Date(str);return isNaN(d)?null:d;}
 function formatDate(d){if(!d)return'';return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();}
 function ultimoDiaMes(a,m){return new Date(a,m,0).getDate();}
@@ -594,7 +584,7 @@ function extraerAnioNac(fStr){
   var m=s.match(/(\d{4})/);return m?parseInt(m[1]):null;
 }
 
-// â”€â”€ PERIODOS DE PAGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PERIODOS DE PAGO ────────────────────────────────────
 function getFechaDesde(p){return new Date(p.anioD,p.mes-1,parseInt(p.diaD)||1);}
 function getFechaHasta(p){var anioH=p.anioH||p.anioD,diaH=parseInt(p.diaH)||0;if(diaH===0)diaH=ultimoDiaMes(anioH,p.mes);return new Date(anioH,p.mes-1,diaH);}
 function getFechaVenc(p){var v=new Date(getFechaHasta(p));v.setDate(v.getDate()+(parseInt(p.gracia)||0));return v;}
@@ -610,12 +600,12 @@ function estadoCuotaV2(f){
   return{estado:'debe',hasta:null};
 }
 
-// â”€â”€ PLANES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PLANES ──────────────────────────────────────────────
 function getPlanJ(f){return(f[COL.PLAN]||'').toString().trim();}
 function getPlanObj(n){return CUOTAS_DB.planes.find(function(p){return p[0]===n;});}
 function periodoLabel(p){var a=p.split('-');var m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return m[parseInt(a[1])-1]+' '+a[0];}
 
-// â”€â”€ RENDER SOCIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── RENDER SOCIOS ────────────────────────────────────────
 function renderPlayers(){
   var busq=document.getElementById('busq').value.toLowerCase();
   var genF=document.getElementById('fGen').value,catF=document.getElementById('fCat').value;
@@ -672,7 +662,7 @@ function renderPlayers(){
   _s('statT',t);_s('statM',m);_s('statF',fc);_s('statD',deu);_s('statV',pv);
 }
 
-// â”€â”€ CUOTAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CUOTAS ───────────────────────────────────────────────
 function poblarPeriodos(){
   var sel=document.getElementById('cPeriodo'),now=new Date(),opts='';
   for(var i=0;i<12;i++){var d=new Date(now.getFullYear(),now.getMonth()-i,1);var v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');opts+='<option value="'+v+'"'+(i===0?' selected':'')+'>'+periodoLabel(v)+'</option>';}
@@ -757,13 +747,10 @@ function confirmarPago(){
     obs:document.getElementById('mp-obs').value,hojaOrigen:pagoCtx.hoja};
   if(!p.fechaPago||!p.monto||!desde||!hasta)return alert('Completa todos los campos');
   mostrarLoader('Registrando pago...');
-  google.script.run
-    .withSuccessHandler(function(){
-      CUOTAS_DB.cuotas.push([p.dni,p.nombre,p.plan,p.periodoDesde,p.periodoHasta,p.fechaPago,p.monto,p.metodo,p.cobrador,p.obs,p.hojaOrigen,Date.now()]);
-      cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();
-    })
-    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
-    .registrarPago(p,TOKEN);
+  callScript({action:'registrarPago', pago:p, pass:TOKEN}, function(){
+    CUOTAS_DB.cuotas.push([p.dni,p.nombre,p.plan,p.periodoDesde,p.periodoHasta,p.fechaPago,p.monto,p.metodo,p.cobrador,p.obs,p.hojaOrigen,Date.now()]);
+    cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();
+  }, function(e){alert('Error: '+e);ocultarLoader();});
 }
 
 function marcarTodosMes(){
@@ -782,7 +769,7 @@ function marcarTodosMes(){
     var pl=getPlanJ(f),po=getPlanObj(pl);
     var p={dni:f[COL.DNI]||f[COL.TARJETA],nombre:f[COL.APELLIDO]+' '+f[COL.NOMBRE],plan:pl,periodoDesde:desde,periodoHasta:hasta,
       fechaPago:new Date().toISOString().split('T')[0],monto:po?po[1]:0,metodo:'Efectivo',cobrador:'',obs:'Marcado masivo',hojaOrigen:f[f.length-2]};
-    google.script.run.withSuccessHandler(function(){if(++done===pend.length){ocultarLoader();inicializar();}}).registrarPago(p,TOKEN);
+    callScript({action:'registrarPago', pago:p, pass:TOKEN}, function(){if(++done===pend.length){ocultarLoader();inicializar();}});
   });
 }
 
@@ -799,7 +786,7 @@ function exportarCSV(){
   a.href=url;a.download='cuotas_excursionistas_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
 }
 
-// â”€â”€ PLANES ADMIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PLANES ADMIN ────────────────────────────────────────
 function renderListPlanes(){
   var el=document.getElementById('listPlanes');
   el.innerHTML=!CUOTAS_DB.planes.length?'<p style="color:var(--muted);font-size:12px;padding:10px;">Sin planes</p>':
@@ -822,12 +809,12 @@ function guardarPlan(){
   if(!n||!m)return alert('Completa nombre y monto');
   mostrarLoader('Guardando plan...');
   var reset=function(){planEditIdx=null;document.getElementById('planNom').value='';document.getElementById('planMonto').value='';document.getElementById('btnPlan').innerText='+';document.getElementById('btnPlan').style.background='';};
-  var reload=function(){google.script.run.withSuccessHandler(function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();ocultarLoader();}).getCuotas(TOKEN);};
-  if(planEditIdx)google.script.run.withSuccessHandler(function(){reset();reload();}).updateAdminItem('Planes',planEditIdx,[n,m],TOKEN);
-  else google.script.run.withSuccessHandler(function(){reset();reload();}).addComplexItem('Planes',[n,m],TOKEN);
+  var reload=function(){callScript({action:'getCuotas',pass:TOKEN},function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();ocultarLoader();});};
+  if(planEditIdx)callScript({action:'updateAdminItem',tabName:'Planes',rowIndex:planEditIdx,rowArray:[n,m],pass:TOKEN},function(){reset();reload();});
+  else callScript({action:'addComplexItem',tabName:'Planes',rowArray:[n,m],pass:TOKEN},function(){reset();reload();});
 }
 
-// â”€â”€ CONFIG PERIODOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CONFIG PERIODOS ──────────────────────────────────────
 function agregarPeriodo(){
   var mes=parseInt(document.getElementById('cpMes').value);
   var anioD=parseInt(document.getElementById('cpAnioD').value)||new Date().getFullYear();
@@ -849,12 +836,12 @@ function generarPeriodosAnio(){
 function eliminarPeriodoEdit(idx){PERIODOS_EDIT.splice(idx,1);renderPeriodosAdmin();}
 function renderPeriodosAdmin(){
   var el=document.getElementById('listPeriodos');
-  if(!PERIODOS_EDIT.length){el.innerHTML='<p style="color:var(--muted);font-size:12px;">Sin periodos. UsÃ¡ GENERAR ANO COMPLETO.</p>';return;}
+  if(!PERIODOS_EDIT.length){el.innerHTML='<p style="color:var(--muted);font-size:12px;">Sin periodos. Usá GENERAR ANO COMPLETO.</p>';return;}
   var hoy=new Date();hoy.setHours(0,0,0,0);
   el.innerHTML=PERIODOS_EDIT.map(function(p,idx){
     var desde=getFechaDesde(p),hasta=getFechaHasta(p),vence=getFechaVenc(p);
     var cls=hoy>vence?'vencido':hoy>=desde&&hoy<=vence?'activo':'proximo';
-    var lbl=cls==='activo'?'ACTIVO':cls==='vencido'?'VENCIDO':'PRÃ“XIMO';
+    var lbl=cls==='activo'?'ACTIVO':cls==='vencido'?'VENCIDO':'PRÓXIMO';
     var color=cls==='activo'?'var(--verde)':cls==='vencido'?'var(--red)':'var(--dorado)';
     var bg=cls==='activo'?'var(--verde-dim)':cls==='vencido'?'var(--red-dim)':'var(--dorado-dim)';
     return'<div class="periodo-card '+cls+'">'
@@ -875,13 +862,13 @@ function guardarPeriodos(){
   if(!PERIODOS_EDIT.length)return alert('No hay periodos para guardar');
   mostrarLoader('Guardando configuracion...');
   var rows=PERIODOS_EDIT.map(function(p){return[p.mes,p.anioD,p.diaD,p.anioH||p.anioD,p.diaH||0,p.gracia||5,p.desc||''];});
-  google.script.run.withSuccessHandler(function(){alert('Configuracion guardada');inicializar();}).withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();}).guardarConfigPagos(rows,TOKEN);
+  callScript({action:'guardarConfigPagos',config:rows,pass:TOKEN},function(){alert('Configuracion guardada');inicializar();},function(e){alert('Error: '+e);ocultarLoader();});
 }
 
-// â”€â”€ ASISTENCIAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ASISTENCIAS ──────────────────────────────────────────
 function poblarTurnosAsist(){
   var sel=document.getElementById('asistTurno');
-  sel.innerHTML='<option value="">-- Sin turno especÃ­fico --</option>';
+  sel.innerHTML='<option value="">-- Sin turno específico --</option>';
   DB.horarios.forEach(function(h,i){sel.innerHTML+='<option value="'+i+'">'+h[0]+' '+h[1]+'hs - '+h[4]+' ('+h[2]+')</option>';});
   var sc=document.getElementById('asistCat');sc.innerHTML='<option value="">Todas</option>';
   DB.categorias.forEach(function(c){sc.innerHTML+='<option>'+c[0]+'</option>';});
@@ -976,22 +963,18 @@ function guardarAsist(tid,tlbl,btnRef){
   // Actualizar local inmediatamente (optimistic update) sin mostrar loader
   asistencias=asistencias.filter(function(r){return r[1]!==tid;}).concat(regs);
   // Guardar en background
-  google.script.run
-    .withSuccessHandler(function(){
-      var btn=btnRef||document.getElementById('btnGuardarAsist');
-      if(btn){btn.innerText='GUARDADO âœ“';btn.style.background='var(--verde)';btn.disabled=false;setTimeout(function(){btn.innerText='GUARDAR';btn.style.background='';},2500);}
-    })
-    .withFailureHandler(function(e){
-      // Si falla, revertir el optimistic update
-      asistencias=asistencias.filter(function(r){return r[1]!==tid;});
-      var btn=btnRef||document.getElementById('btnGuardarAsist');
-      if(btn){btn.innerText='ERROR - REINTENTAR';btn.style.background='var(--red)';btn.disabled=false;}
-      alert('Error al guardar: '+e);
-    })
-    .guardarAsistencia(regs,TOKEN);
+  callScript({action:'guardarAsistencia',registros:regs,pass:TOKEN},function(){
+    var btn=btnRef||document.getElementById('btnGuardarAsist');
+    if(btn){btn.innerText='GUARDADO';btn.style.background='var(--verde)';btn.disabled=false;setTimeout(function(){btn.innerText='GUARDAR';btn.style.background='';},2500);}
+  },function(e){
+    asistencias=asistencias.filter(function(r){return r[1]!==tid;});
+    var btn=btnRef||document.getElementById('btnGuardarAsist');
+    if(btn){btn.innerText='ERROR';btn.style.background='var(--red)';btn.disabled=false;}
+    alert('Error al guardar: '+e);
+  });
 }
 
-// â”€â”€ STATS ASISTENCIA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── STATS ASISTENCIA ─────────────────────────────────────
 function getStatsJ(dni){
   var h=new Date(),mes=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0');
   var reg=asistencias.filter(function(r){return r[3]==dni&&r[0].startsWith(mes);});
@@ -1000,7 +983,7 @@ function getStatsJ(dni){
 }
 function getHistJ(dni){return asistencias.filter(function(r){return r[3]==dni;}).sort(function(a,b){return b[0].localeCompare(a[0]);}).slice(0,20);}
 
-// â”€â”€ MODAL SOCIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MODAL SOCIO ──────────────────────────────────────────
 function abrirM(ai){
   var f=DB.jugadores[ai];
   var dni=(f[COL.DNI]||f[COL.TARJETA]||'').toString();
@@ -1033,7 +1016,7 @@ function abrirM(ai){
     hist.map(function(r){var p=(r[5]===true||String(r[5]).toLowerCase()==='true');return'<div class="hist-dot '+(p?'p':'a')+'" title="'+r[0]+'">'+(p?'OK':'X')+'</div>';}).join('');
   var cv=estadoCuotaV2(f);
   var ec=document.getElementById('m-estado-cuota');
-  if(cv.estado==='ok')ec.innerHTML='<span style="color:#6de097;font-weight:700;">AL DÃA</span>'+(cv.hasta?' - Vigente hasta <strong>'+formatDate(cv.hasta)+'</strong>':'');
+  if(cv.estado==='ok')ec.innerHTML='<span style="color:#6de097;font-weight:700;">AL DÍA</span>'+(cv.hasta?' - Vigente hasta <strong>'+formatDate(cv.hasta)+'</strong>':'');
   else if(cv.estado==='vence')ec.innerHTML='<span style="color:var(--dorado-lite);font-weight:700;">POR VENCER</span>'+(cv.hasta?' - Vence el <strong>'+formatDate(cv.hasta)+'</strong>':'');
   else if(cv.estado==='debe')ec.innerHTML='<span style="color:var(--red);font-weight:700;">DEBE</span> - Sin pago vigente';
   else ec.innerHTML='<span style="color:var(--muted);">Sin plan asignado</span>';
@@ -1056,10 +1039,9 @@ function guardarPlanJugador(){
   if(!itemSel)return;
   var plan=document.getElementById('m-plan').value;
   mostrarLoader('Guardando plan...');
-  google.script.run
-    .withSuccessHandler(function(){DB.jugadores[itemSel.arrIdx][COL.PLAN]=plan;ocultarLoader();cerrarModal();renderPlayers();})
-    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
-    .guardarPlanJugador({sheet:itemSel.sheet,row:itemSel.row,plan:plan},TOKEN);
+  callScript({action:'guardarPlanJugador',item:{sheet:itemSel.sheet,row:itemSel.row,plan:plan},pass:TOKEN},function(){
+    DB.jugadores[itemSel.arrIdx][COL.PLAN]=plan;ocultarLoader();cerrarModal();renderPlayers();
+  },function(e){alert('Error: '+e);ocultarLoader();});
 }
 
 // AUTO-CATEGORIZAR por anio de nacimiento
@@ -1081,23 +1063,16 @@ function guardarJ(){
     activo:document.getElementById('m-estado').value==='true',
     categoria:document.getElementById('m-cat-m').value};
   mostrarLoader('Guardando ficha...');
-  google.script.run
-    .withSuccessHandler(function(){
-      // Actualizar local con los mismos tipos que usa el filtro
-      DB.jugadores[itemSel.arrIdx][COL.ACTIVO] = d.activo ? 'Si' : 'No';
-      DB.jugadores[itemSel.arrIdx][COL.CATEGORIA_APP] = d.categoria;
-      DB.jugadores[itemSel.arrIdx][COL.SEXO] = d.genero;
-      ocultarLoader();
-      cerrarModal();
-      renderPlayers();
-      toast('Ficha actualizada', 'ok');
-    })
-    .withFailureHandler(function(e){alert('Error al guardar: '+e);ocultarLoader();})
-    .updatePlayer(d,TOKEN);
+  callScript({action:'updatePlayer',item:d,pass:TOKEN},function(){
+    DB.jugadores[itemSel.arrIdx][COL.ACTIVO]=d.activo?'Si':'No';
+    DB.jugadores[itemSel.arrIdx][COL.CATEGORIA_APP]=d.categoria;
+    DB.jugadores[itemSel.arrIdx][COL.SEXO]=d.genero;
+    ocultarLoader();cerrarModal();renderPlayers();toast('Ficha actualizada','ok');
+  },function(e){alert('Error al guardar: '+e);ocultarLoader();});
 }
 
 function autoCategorizarTodo(){
-  if(!confirm('AsignarÃ¡ categoria a TODOS por anio de nacimiento. Continuar?'))return;
+  if(!confirm('Asignará categoria a TODOS por anio de nacimiento. Continuar?'))return;
   mostrarLoader('Procesando...');
   var upd=[];
   DB.jugadores.slice(1).forEach(function(f){
@@ -1109,23 +1084,13 @@ function autoCategorizarTodo(){
   });
   if(!upd.length){alert('Todos ya estan en la categoria correcta.');ocultarLoader();return;}
   document.getElementById('loader-msg').innerText='Actualizando '+upd.length+' registros...';
-  google.script.run
-    .withSuccessHandler(function(){
-      // Actualizar local sin recargar todo
-      upd.forEach(function(u){
-        var jug=DB.jugadores.find(function(f){return f[f.length-1]===u.row;});
-        if(jug) jug[COL.CATEGORIA_APP]=u.cat;
-      });
-      ocultarLoader();
-      renderPlayers();
-      poblarSelects();
-      toast('Actualizados: '+upd.length+' socios','ok');
-    })
-    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
-    .bulkUpdateCategories(upd,TOKEN);
+  callScript({action:'bulkUpdateCategories',updates:upd,pass:TOKEN},function(){
+    upd.forEach(function(u){var jug=DB.jugadores.find(function(f){return f[f.length-1]===u.row;});if(jug)jug[COL.CATEGORIA_APP]=u.cat;});
+    ocultarLoader();renderPlayers();poblarSelects();toast('Actualizados: '+upd.length+' socios','ok');
+  },function(e){alert('Error: '+e);ocultarLoader();});
 }
 
-// â”€â”€ ADMIN LISTAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ADMIN LISTAS ─────────────────────────────────────────
 function renderList(id,data,tabla){
   var el=document.getElementById(id);
   el.innerHTML=data.map(function(item){
@@ -1135,8 +1100,8 @@ function renderList(id,data,tabla){
   el.addEventListener('click',function(e){var btn=e.target.closest('[data-action="borrar"]');if(btn)borrar(btn.dataset.tabla,parseInt(btn.dataset.row));});
 }
 
-function crearSimple(t,id){var v=document.getElementById(id).value.trim();if(!v)return alert('Ingresa un valor');mostrarLoader('Guardando...');google.script.run.withSuccessHandler(function(){document.getElementById(id).value='';inicializar();}).addComplexItem(t,[v],TOKEN);}
-function borrar(t,r){if(!confirm('Â¿Eliminar?'))return;mostrarLoader('Eliminando...');google.script.run.withSuccessHandler(inicializar).deleteAdminItem(t,r,TOKEN);}
+function crearSimple(t,id){var v=document.getElementById(id).value.trim();if(!v)return alert('Ingresa un valor');mostrarLoader('Guardando...');callScript({action:'addComplexItem',tabName:t,rowArray:[v],pass:TOKEN},function(){document.getElementById(id).value='';inicializar();});}
+function borrar(t,r){if(!confirm('Eliminar?'))return;mostrarLoader('Eliminando...');callScript({action:'deleteAdminItem',tabName:t,rowIndex:r,pass:TOKEN},inicializar);}
 
 function renderListCat(){
   var el=document.getElementById('listCat');
@@ -1158,15 +1123,13 @@ function guardarCat(){
   mostrarLoader('Guardando...');
   var resetCat=function(){catEditIdx=null;document.getElementById('btnCat').innerText='GUARDAR CATEGORIA';document.getElementById('btnCat').style.background='';document.getElementById('cardCat').style.borderColor='';limpiarFormCat();};
   var reloadCats=function(){
-    google.script.run.withSuccessHandler(function(raw){
-      var dat=JSON.parse(raw);
+    callScript({action:'getData',pass:TOKEN},function(dat){
       if(!dat.error){DB.categorias=dat.categorias;}
-      resetCat();renderListCat();poblarSelects();ocultarLoader();
-      toast('Categoria guardada','ok');
-    }).getData(TOKEN);
+      resetCat();renderListCat();poblarSelects();ocultarLoader();toast('Categoria guardada','ok');
+    });
   };
-  if(catEditIdx)google.script.run.withSuccessHandler(reloadCats).updateAdminItem('Config_Categorias',catEditIdx,d,TOKEN);
-  else google.script.run.withSuccessHandler(reloadCats).addComplexItem('Config_Categorias',d,TOKEN);
+  if(catEditIdx)callScript({action:'updateAdminItem',tabName:'Config_Categorias',rowIndex:catEditIdx,rowArray:d,pass:TOKEN},reloadCats);
+  else callScript({action:'addComplexItem',tabName:'Config_Categorias',rowArray:d,pass:TOKEN},reloadCats);
 }
 function limpiarFormCat(){document.getElementById('cNom').value='';document.getElementById('cCol').value='#1a7a3c';document.getElementById('cMin').value='';document.getElementById('cMax').value='';document.getElementById('cGen').value='Masculino';}
 
@@ -1185,7 +1148,7 @@ function crearHorario(){
   var pr=Array.from(document.getElementById('hProfe').selectedOptions).map(function(o){return o.value;}).join(', ');
   var d=[document.getElementById('hDia').value,document.getElementById('hHora').value,document.getElementById('hSede').value,pr,document.getElementById('hCat').value];
   if(!d[1]||!pr)return alert('Completa hora y profesores');
-  mostrarLoader('Creando turno...');google.script.run.withSuccessHandler(inicializar).addComplexItem('Horarios',d,TOKEN);
+  mostrarLoader('Creando turno...');callScript({action:'addComplexItem',tabName:'Horarios',rowArray:d,pass:TOKEN},inicializar);
 }
 
 function poblarSelects(){
@@ -1197,22 +1160,21 @@ function poblarSelects(){
   document.getElementById('hProfe').innerHTML=DB.profesores.map(function(p){return'<option>'+p[0]+'</option>';}).join('');
 }
 
-// â”€â”€ ARCHIVOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ARCHIVOS ──────────────────────────────────────────────
 function subirArchivo(tipo){
   var inp=document.getElementById('f-'+tipo),f=inp.files[0];if(!f)return alert('Selecciona un archivo');
   mostrarLoader('Subiendo...');
   var r=new FileReader();
   r.onload=function(e){
     var fo={base64:e.target.result.split(',')[1],mimeType:f.type,fileName:f.name,typeDoc:tipo,sheet:itemSel.sheet,row:itemSel.row};
-    google.script.run
-      .withSuccessHandler(function(url){alert('Archivo subido âœ“');mostrarLink('l-'+tipo,url,tipo==='perfil'?'Ver Foto':tipo==='dni'?'Ver DNI':'Ver Apto');inp.value='';ocultarLoader();})
-      .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
-      .uploadFile(fo,TOKEN);
+    callScript({action:'uploadFile',fileObj:fo,pass:TOKEN},function(url){
+      alert('Archivo subido');mostrarLink('l-'+tipo,url,tipo==='perfil'?'Ver Foto':tipo==='dni'?'Ver DNI':'Ver Apto');inp.value='';ocultarLoader();
+    },function(e){alert('Error: '+e);ocultarLoader();});
   };r.readAsDataURL(f);
 }
 function mostrarLink(id,url,txt){document.getElementById(id).innerHTML=url?'<a href="'+url+'" target="_blank" style="color:#6de097;font-size:11px;text-decoration:none;">'+txt+'</a>':'<span style="color:var(--muted);font-size:11px;">Sin archivo</span>';}
 
-// â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── HELPERS ───────────────────────────────────────────────
 function toast(msg,tipo){
   var t=document.createElement('div');
   var bg=tipo==='ok'?'var(--verde)':tipo==='error'?'var(--red)':'var(--dorado)';
@@ -1247,96 +1209,6 @@ function cambiarTab(ev,id){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
   ev.target.classList.add('active');
   if(id==='cuotas')renderCuotas();
-}
-</script>
-
-<!-- VERSION BADGE -->
-<div style="position:fixed;bottom:12px;right:12px;z-index:8000;
-  background:rgba(10,13,10,.85);border:1px solid #1a7a3c;
-  border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;
-  font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;
-  pointer-events:none;">v1.0</div>
-
-<!-- â•â• PWA INSTALL BANNER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
-  background:linear-gradient(135deg,#0f5228 0%,#0a0d0a 100%);
-  border-top:2px solid #1a7a3c;padding:14px 20px;
-  display:flex;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,.6);">
-  <img src="icons/icon-192.png" style="width:44px;height:44px;border-radius:8px;flex-shrink:0;">
-  <div style="flex:1;">
-    <div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:800;
-      color:white;text-transform:uppercase;letter-spacing:.05em;">Excursionistas FC</div>
-    <div style="font-size:11px;color:#7a927a;margin-top:2px;">Instalar app en tu celular</div>
-  </div>
-  <button id="pwa-install-btn" style="background:#1a7a3c;color:white;border:none;
-    border-radius:8px;padding:10px 18px;font-family:Barlow Condensed,sans-serif;
-    font-size:13px;font-weight:800;text-transform:uppercase;cursor:pointer;
-    letter-spacing:.05em;white-space:nowrap;">
-    INSTALAR
-  </button>
-  <button onclick="document.getElementById('pwa-banner').style.display='none';
-    localStorage.setItem('pwa-dismissed','1');"
-    style="background:none;border:none;color:#7a927a;font-size:22px;
-    cursor:pointer;padding:4px;line-height:1;flex-shrink:0;">&#x2715;</button>
-</div>
-
-<script>
-// â”€â”€ SERVICE WORKER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').then(function(reg) {
-      console.log('SW registrado:', reg.scope);
-    }).catch(function(err) {
-      console.log('SW error:', err);
-    });
-  });
-}
-
-// â”€â”€ PWA INSTALL PROMPT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-var deferredPrompt = null;
-var banner = document.getElementById('pwa-banner');
-var installBtn = document.getElementById('pwa-install-btn');
-
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredPrompt = e;
-  // Mostrar banner solo si no fue descartado antes
-  if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
-    banner.style.display = 'flex';
-  }
-});
-
-if (installBtn) {
-  installBtn.addEventListener('click', function() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(choice) {
-      if (choice.outcome === 'accepted') {
-        banner.style.display = 'none';
-        localStorage.setItem('pwa-dismissed', '1');
-      }
-      deferredPrompt = null;
-    });
-  });
-}
-
-// iOS: no tiene beforeinstallprompt â€” mostrar instrucciones manuales
-var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-var isStandalone = window.navigator.standalone;
-if (isIOS && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
-  var iosBanner = document.createElement('div');
-  iosBanner.style.cssText = 'display:flex;position:fixed;bottom:0;left:0;right:0;z-index:9999;'
-    + 'background:linear-gradient(135deg,#0f5228 0%,#0a0d0a 100%);'
-    + 'border-top:2px solid #1a7a3c;padding:14px 20px;align-items:center;gap:12px;'
-    + 'box-shadow:0 -4px 20px rgba(0,0,0,.6);';
-  iosBanner.innerHTML = '<img src="icons/icon-192.png" style="width:40px;height:40px;border-radius:8px;flex-shrink:0;">'
-    + '<div style="flex:1;">'
-    + '<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;color:white;text-transform:uppercase;">Instalar en iPhone</div>'
-    + '<div style="font-size:11px;color:#7a927a;margin-top:3px;">Toca <strong style="color:#c9a227;">Compartir</strong> â†’ <strong style="color:#c9a227;">Agregar a inicio</strong></div>'
-    + '</div>'
-    + '<button onclick="this.parentElement.remove();localStorage.setItem(&quot;pwa-dismissed&quot;,&quot;1&quot;);" '
-    + 'style="background:none;border:none;color:#7a927a;font-size:22px;cursor:pointer;padding:4px;line-height:1;">&#x2715;</button>';
-  document.body.appendChild(iosBanner);
 }
 </script>
 </body>
