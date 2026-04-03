@@ -6,7 +6,7 @@
 <meta http-equiv="Expires" content="0">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Excursionistas - Gestion</title>
+<title>Club Atletico Excursionistas - Gestion</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -198,10 +198,10 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   <div class="login-card">
     <img class="login-escudo"
       src="https://drive.google.com/thumbnail?id=1e6tSG1WlG-YC9Mj9ShPnAViIJvHDhftX&sz=w200"
-      alt="Excursionistas"
+      alt="Club Atletico Excursionistas"
       onerror="this.style.display='none'">
     <div class="logo" style="margin-bottom:6px;justify-content:center;">
-      EXCURSIONISTAS <span>FC</span>
+      CLUB ATLETICO <span style="color:var(--dorado)">EXCURSIONISTAS</span>
     </div>
     <p style="color:var(--muted);font-size:11px;margin-bottom:20px;text-transform:uppercase;letter-spacing:.1em;">Sistema de Gestion</p>
     <input type="password" id="passInput" placeholder="CONTRASENA" onkeyup="if(event.key==='Enter')intentarLogin()">
@@ -214,7 +214,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   <div class="logo">
     <img src="https://drive.google.com/thumbnail?id=1e6tSG1WlG-YC9Mj9ShPnAViIJvHDhftX&sz=w100"
          alt="CAE" onerror="this.style.display='none'">
-    EXCURSIONISTAS <span>FC</span>
+    CLUB ATLETICO <span style="color:var(--dorado)">EXCURSIONISTAS</span>
   </div>
   <button class="btn btn-secondary" onclick="inicializar()">⟳ RECARGAR</button>
 </header>
@@ -807,7 +807,7 @@ function exportarCSV(){
   });
   var blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
   var url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='cuotas_excursionistas_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
+  a.href=url;a.download='cuotas_cae_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
 }
 
 // ── PLANES ADMIN ────────────────────────────────────────
