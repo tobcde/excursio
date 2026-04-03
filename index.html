@@ -490,43 +490,55 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw86r6IMSOdcU_mP3yPXg4Shspg84E3eF1RkXMfg4F_t1wFRciaI2KdjFv4_wKiO3TtBQ/exec';
 
 // ── JSONP helper — reemplaza google.script.run ─────────────
-function callScript(payload, onSuccess, onError) {
+function callScript(payload, onSuccess, onError, _retryCount) {
   var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
   var url = SCRIPT_URL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
   var done = false;
-  var script = document.createElement('script');
+  var retries = _retryCount || 0;
+  var TIMEOUT = 35000; // 35s para redes moviles lentas
 
-  // Timeout de 20 segundos (getData puede tardar en mobile)
   var timer = setTimeout(function() {
     if (done) return;
     done = true;
     delete window[cb];
-    if (script.parentNode) script.parentNode.removeChild(script);
-    if (onError) onError('Tiempo de espera agotado. Verifica tu conexion.');
-  }, 20000);
+    if (script && script.parentNode) script.parentNode.removeChild(script);
+    if (retries < 2) {
+      // Reintentar automaticamente hasta 2 veces
+      setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 1500);
+    } else {
+      if (onError) onError('Sin respuesta del servidor. Verifica tu conexion a internet.');
+    }
+  }, TIMEOUT);
 
   window[cb] = function(data) {
     if (done) return;
     done = true;
     clearTimeout(timer);
     delete window[cb];
-    if (script.parentNode) script.parentNode.removeChild(script);
+    if (script && script.parentNode) script.parentNode.removeChild(script);
     if (data && data.error) { if(onError) onError(data.error); else alert('Error: ' + data.error); }
     else { if(onSuccess) onSuccess(data); }
   };
 
+  var script = document.createElement('script');
   script.src = url;
-  // En mobile, onerror puede dispararse aunque el script siga cargando (por redirecciones)
-  // Esperamos 3s antes de reportar error para darle tiempo al callback
+  // onerror en mobile puede dispararse por redirecciones de Google
+  // NO reportar error inmediatamente — esperar al timeout
   script.onerror = function() {
+    // En Chrome mobile, onerror + redirect de Google = el callback igual llega
+    // Si en 25s no llego el callback, ahi si es error real
     setTimeout(function() {
-      if (done) return; // el callback ya llego, ignorar
+      if (done) return;
       done = true;
       clearTimeout(timer);
       delete window[cb];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      if (onError) onError('Error de conexion. Verifica tu acceso a internet.');
-    }, 3000);
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+      if (retries < 2) {
+        setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 2000);
+      } else {
+        if (onError) onError('No se pudo conectar. Asegurate de tener internet y vuelve a intentar.');
+      }
+    }, 25000);
   };
   document.head.appendChild(script);
 }
@@ -558,7 +570,7 @@ function ocultarLoader(){document.getElementById('loader').style.display='none';
 
 function inicializar(){
   if(!TOKEN)return;
-  mostrarLoader('Cargando socios...');
+  mostrarLoader('Conectando... (puede tardar unos segundos)');
   callScript({action:'getData', pass:TOKEN}, function(d){
     if(d.error){alert(d.error);ocultarLoader();return;}
     document.getElementById('login-screen').style.display='none';
