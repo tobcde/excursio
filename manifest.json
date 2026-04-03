@@ -1,7 +1,7 @@
 {
-  "name": "Excursionistas FC - Gestion",
-  "short_name": "Excursionistas",
-  "description": "Sistema de gestion de socios y asistencias - CA Excursionistas Futsal",
+  "name": "Club Atletico Excursionistas",
+  "short_name": "CA Excursionistas",
+  "description": "Sistema de gestion de socios y asistencias - Club Atletico Excursionistas",
   "start_url": "/excursio/",
   "scope": "/excursio/",
   "display": "standalone",
