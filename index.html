@@ -491,55 +491,42 @@ var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw86r6IMSOdcU_mP3yPXg4
 
 // ── JSONP helper — reemplaza google.script.run ─────────────
 function callScript(payload, onSuccess, onError, _retryCount) {
+  var retries = _retryCount || 0;
   var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
   var url = SCRIPT_URL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
   var done = false;
-  var retries = _retryCount || 0;
-  var TIMEOUT = 35000; // 35s para redes moviles lentas
+  var script = document.createElement('script');
 
-  var timer = setTimeout(function() {
-    if (done) return;
-    done = true;
-    delete window[cb];
-    if (script && script.parentNode) script.parentNode.removeChild(script);
-    if (retries < 2) {
-      // Reintentar automaticamente hasta 2 veces
-      setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 1500);
-    } else {
-      if (onError) onError('Sin respuesta del servidor. Verifica tu conexion a internet.');
-    }
-  }, TIMEOUT);
-
-  window[cb] = function(data) {
-    if (done) return;
+  function cleanup() {
     done = true;
     clearTimeout(timer);
     delete window[cb];
-    if (script && script.parentNode) script.parentNode.removeChild(script);
-    if (data && data.error) { if(onError) onError(data.error); else alert('Error: ' + data.error); }
+    try { document.head.removeChild(script); } catch(e) {}
+  }
+
+  window[cb] = function(data) {
+    if (done) return;
+    cleanup();
+    if (data && data.error) { if(onError) onError(data.error); else alert('Error: '+data.error); }
     else { if(onSuccess) onSuccess(data); }
   };
 
-  var script = document.createElement('script');
+  // Timeout total: 40s para redes lentas
+  var timer = setTimeout(function() {
+    if (done) return;
+    cleanup();
+    if (retries < 2) {
+      setTimeout(function() { callScript(payload, onSuccess, onError, retries+1); }, 2000);
+    } else {
+      if (onError) onError('Tiempo agotado. Verifica tu conexion a internet.');
+    }
+  }, 40000);
+
   script.src = url;
-  // onerror en mobile puede dispararse por redirecciones de Google
-  // NO reportar error inmediatamente — esperar al timeout
-  script.onerror = function() {
-    // En Chrome mobile, onerror + redirect de Google = el callback igual llega
-    // Si en 25s no llego el callback, ahi si es error real
-    setTimeout(function() {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      delete window[cb];
-      if (script && script.parentNode) script.parentNode.removeChild(script);
-      if (retries < 2) {
-        setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 2000);
-      } else {
-        if (onError) onError('No se pudo conectar. Asegurate de tener internet y vuelve a intentar.');
-      }
-    }, 25000);
-  };
+  // IMPORTANTE: NO usar onerror para cancelar.
+  // En Chrome mobile el onerror se dispara por el redirect de Google
+  // pero el callback llega igual despues. Ignorar onerror completamente.
+  script.onerror = function() { /* ignorar - el callback puede llegar igual */ };
   document.head.appendChild(script);
 }
 
@@ -1245,5 +1232,10 @@ function cambiarTab(ev,id){
   if(id==='cuotas')renderCuotas();
 }
 </script>
+
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;
+  background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;
+  padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;
+  font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.1</div>
 </body>
 </html>
