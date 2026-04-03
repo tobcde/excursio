@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Club Atletico Excursionistas - Gestion</title>
@@ -198,7 +195,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   <div class="login-card">
     <img class="login-escudo"
       src="https://drive.google.com/thumbnail?id=1e6tSG1WlG-YC9Mj9ShPnAViIJvHDhftX&sz=w200"
-      alt="Club Atletico Excursionistas"
+      alt="Excursionistas"
       onerror="this.style.display='none'">
     <div class="logo" style="margin-bottom:6px;justify-content:center;">
       CLUB ATLETICO <span style="color:var(--dorado)">EXCURSIONISTAS</span>
@@ -492,47 +489,50 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 // ── URL DEL APPS SCRIPT (API) ─────────────────────────────
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxit9v0XTBTP_6IZqnKx-wHm1IBSf0ehjXkCm8dXzHl-LaNykbGkSMRHx3Hv34ANH6SFQ/exec';
 
-// ── JSONP helper — reemplaza google.script.run ─────────────
-function callScript(payload, onSuccess, onError, _retryCount) {
-  var retries = _retryCount || 0;
-  var cb = 'gs_' + Date.now() + '_' + Math.floor(Math.random()*99999);
-  var url = SCRIPT_URL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
-  var done = false;
-  var script = document.createElement('script');
 
-  var timer = setTimeout(function() {
-    if (done) return;
-    done = true;
-    delete window[cb];
-    if (script.parentNode) script.parentNode.removeChild(script);
-    if (retries < 1 && !payload._noRetry) {
-      // 1 solo reintento automatico (salvo que se pida no reintentar)
-      setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 2000);
-    } else {
-      if (onError) onError('Sin respuesta del servidor. Verifica tu conexion.');
-    }
-  }, 15000);  // 15s timeout
-
-  window[cb] = function(data) {
-    if (done) return;
-    done = true;
-    clearTimeout(timer);
-    delete window[cb];
-    if (script.parentNode) script.parentNode.removeChild(script);
-    if (data && data.error) {
-      if (onError) onError(data.error);
-    } else {
-      if (onSuccess) onSuccess(data);
-    }
-  };
-
-  script.src = url;
-  // NO cancelar en onerror: en mobile Chrome el onerror se dispara
-  // por el redirect de Google pero el callback llega igual.
-  script.onerror = function() { /* ignorar, el timer maneja el timeout */ };
-  document.head.appendChild(script);
+var _BASE_URL = null;
+function _discoverURL(cb) {
+  if (_BASE_URL) { cb(_BASE_URL); return; }
+  var cached = localStorage.getItem('gas_base_url_v2');
+  if (cached) { _BASE_URL = cached; cb(_BASE_URL); return; }
+  fetch(SCRIPT_URL + '?callback=p&payload=%7B%7D', {method:'GET',redirect:'follow'})
+    .then(function(r) {
+      var full = r.url, q = full.indexOf('?');
+      _BASE_URL = q > 0 ? full.substring(0, q) : full;
+      localStorage.setItem('gas_base_url_v2', _BASE_URL);
+      cb(_BASE_URL);
+    })
+    .catch(function() { _BASE_URL = SCRIPT_URL; cb(_BASE_URL); });
 }
-
+function callScript(payload, onSuccess, onError, _retry) {
+  _discoverURL(function(baseURL) {
+    var cb = 'gs_' + Date.now() + '_' + Math.floor(Math.random()*99999);
+    var url = baseURL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+    var done = false;
+    var script = document.createElement('script');
+    var timer = setTimeout(function() {
+      if (done) return;
+      done = true; delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (!_retry && !payload._noRetry) {
+        _BASE_URL = null; localStorage.removeItem('gas_base_url_v2');
+        setTimeout(function() { callScript(payload, onSuccess, onError, true); }, 1000);
+      } else {
+        if (onError) onError('Sin respuesta. Verifica tu conexion.');
+      }
+    }, 20000);
+    window[cb] = function(data) {
+      if (done) return;
+      done = true; clearTimeout(timer); delete window[cb];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      if (data && data.error) { if (onError) onError(data.error); }
+      else { if (onSuccess) onSuccess(data); }
+    };
+    script.src = url;
+    script.onerror = function() { /* ignorar */ };
+    document.head.appendChild(script);
+  });
+}
 var DB={jugadores:[],profesores:[],sedes:[],categorias:[],horarios:[],configPagos:[]};
 var CUOTAS_DB={planes:[],cuotas:[]};
 var TOKEN='',itemSel=null,catEditIdx=null,planEditIdx=null;
@@ -560,8 +560,8 @@ function ocultarLoader(){document.getElementById('loader').style.display='none';
 
 function inicializar(){
   if(!TOKEN)return;
-  mostrarLoader('Conectando... (puede tardar unos segundos)');
-  callScript({action:'getData', pass:TOKEN}, function(d){
+  mostrarLoader('Conectando...');
+  callScript({action:'getData',pass:TOKEN}, function(d){
     if(d.error){alert(d.error);ocultarLoader();return;}
     document.getElementById('login-screen').style.display='none';
     DB=d;
@@ -576,8 +576,8 @@ function inicializar(){
     ocultarLoader();
     var pendientes=2;
     function finCarga(){if(--pendientes===0){renderPlayers();}}
-    callScript({action:'getAsistencias', pass:TOKEN}, function(r){asistencias=JSON.parse(r);finCarga();}, function(){finCarga();});
-    callScript({action:'getCuotas', pass:TOKEN}, function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();finCarga();}, function(){finCarga();});
+    callScript({action:'getAsistencias',pass:TOKEN},function(r){asistencias=JSON.parse(r);finCarga();},function(){finCarga();});
+    callScript({action:'getCuotas',pass:TOKEN},function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();finCarga();},function(){finCarga();});
   }, function(e){alert('Error: '+e);ocultarLoader();});
 }
 
@@ -771,10 +771,10 @@ function confirmarPago(){
     obs:document.getElementById('mp-obs').value,hojaOrigen:pagoCtx.hoja};
   if(!p.fechaPago||!p.monto||!desde||!hasta)return alert('Completa todos los campos');
   mostrarLoader('Registrando pago...');
-  callScript({action:'registrarPago', pago:p, pass:TOKEN}, function(){
+  callScript({action:'registrarPago',pago:p,pass:TOKEN},function(){
     CUOTAS_DB.cuotas.push([p.dni,p.nombre,p.plan,p.periodoDesde,p.periodoHasta,p.fechaPago,p.monto,p.metodo,p.cobrador,p.obs,p.hojaOrigen,Date.now()]);
     cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();
-  }, function(e){alert('Error: '+e);ocultarLoader();});
+  },function(e){alert('Error: '+e);ocultarLoader();});
 }
 
 function marcarTodosMes(){
@@ -793,7 +793,7 @@ function marcarTodosMes(){
     var pl=getPlanJ(f),po=getPlanObj(pl);
     var p={dni:f[COL.DNI]||f[COL.TARJETA],nombre:f[COL.APELLIDO]+' '+f[COL.NOMBRE],plan:pl,periodoDesde:desde,periodoHasta:hasta,
       fechaPago:new Date().toISOString().split('T')[0],monto:po?po[1]:0,metodo:'Efectivo',cobrador:'',obs:'Marcado masivo',hojaOrigen:f[f.length-2]};
-    callScript({action:'registrarPago', pago:p, pass:TOKEN}, function(){if(++done===pend.length){ocultarLoader();inicializar();}});
+    callScript({action:'registrarPago',pago:p,pass:TOKEN},function(){if(++done===pend.length){ocultarLoader();inicializar();}});
   });
 }
 
@@ -807,7 +807,7 @@ function exportarCSV(){
   });
   var blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
   var url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='cuotas_cae_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
+  a.href=url;a.download='cuotas_excursionistas_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
 }
 
 // ── PLANES ADMIN ────────────────────────────────────────
@@ -1063,9 +1063,7 @@ function guardarPlanJugador(){
   if(!itemSel)return;
   var plan=document.getElementById('m-plan').value;
   mostrarLoader('Guardando plan...');
-  callScript({action:'guardarPlanJugador',item:{sheet:itemSel.sheet,row:itemSel.row,plan:plan},pass:TOKEN},function(){
-    DB.jugadores[itemSel.arrIdx][COL.PLAN]=plan;ocultarLoader();cerrarModal();renderPlayers();
-  },function(e){alert('Error: '+e);ocultarLoader();});
+  callScript({action:'guardarPlanJugador',item:{sheet:itemSel.sheet,row:itemSel.row,plan:plan},pass:TOKEN},function(){DB.jugadores[itemSel.arrIdx][COL.PLAN]=plan;ocultarLoader();cerrarModal();renderPlayers();},function(e){alert('Error: '+e);ocultarLoader();});
 }
 
 // AUTO-CATEGORIZAR por anio de nacimiento
@@ -1191,9 +1189,7 @@ function subirArchivo(tipo){
   var r=new FileReader();
   r.onload=function(e){
     var fo={base64:e.target.result.split(',')[1],mimeType:f.type,fileName:f.name,typeDoc:tipo,sheet:itemSel.sheet,row:itemSel.row};
-    callScript({action:'uploadFile',fileObj:fo,pass:TOKEN},function(url){
-      alert('Archivo subido');mostrarLink('l-'+tipo,url,tipo==='perfil'?'Ver Foto':tipo==='dni'?'Ver DNI':'Ver Apto');inp.value='';ocultarLoader();
-    },function(e){alert('Error: '+e);ocultarLoader();});
+    callScript({action:'uploadFile',fileObj:fo,pass:TOKEN},function(url){alert('Archivo subido');mostrarLink('l-'+tipo,url,tipo==='perfil'?'Ver Foto':tipo==='dni'?'Ver DNI':'Ver Apto');inp.value='';ocultarLoader();},function(e){alert('Error: '+e);ocultarLoader();});
   };r.readAsDataURL(f);
 }
 function mostrarLink(id,url,txt){document.getElementById(id).innerHTML=url?'<a href="'+url+'" target="_blank" style="color:#6de097;font-size:11px;text-decoration:none;">'+txt+'</a>':'<span style="color:var(--muted);font-size:11px;">Sin archivo</span>';}
@@ -1235,10 +1231,6 @@ function cambiarTab(ev,id){
   if(id==='cuotas')renderCuotas();
 }
 </script>
-
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;
-  background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;
-  padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;
-  font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.2</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.3</div>
 </body>
 </html>
