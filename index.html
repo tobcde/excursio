@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excursionistas - Gestion</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a7a3c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Excursionistas">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d0a;--surface:#121812;--surface2:#181f18;--border:#253025;
+  --text:#e8f0e8;--muted:#7a927a;
+  --verde:#1a7a3c;--verde-dark:#0f5228;--verde-glow:rgba(26,122,60,.3);
+  --verde-dim:rgba(26,122,60,.12);--verde-border:rgba(26,122,60,.35);
+  --dorado:#c9a227;--dorado-lite:#f0cb5a;--dorado-dim:rgba(201,162,39,.15);--dorado-border:rgba(201,162,39,.35);
+  --red:#f87171;--red-dim:rgba(248,113,113,.12);--red-border:rgba(248,113,113,.3);
+  --orange:#fb923c;--purple:#a78bfa;--yellow:#fbbf24;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:3000;display:flex;align-items:center;justify-content:center;}
+.login-card{background:var(--surface2);padding:40px;border-radius:16px;border:2px solid var(--verde);text-align:center;width:90%;max-width:380px;box-shadow:0 0 40px var(--verde-glow);}
+.login-escudo{width:80px;height:80px;object-fit:contain;background:white;border-radius:8px;padding:6px;margin-bottom:16px;}
+.login-card input{width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;margin-bottom:15px;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:2px;}
+.login-card input:focus{outline:none;border-color:var(--verde);}
+
+/* ── HEADER ── */
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:10px;}
+.logo span{color:var(--dorado);}
+.logo img{width:36px;height:36px;object-fit:contain;background:white;border-radius:5px;padding:2px;}
+header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{font-family:'Barlow Condensed',sans-serif;padding:15px 22px;cursor:pointer;color:var(--muted);border:none;background:none;text-transform:uppercase;border-bottom:3px solid transparent;font-size:13px;letter-spacing:.05em;white-space:nowrap;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--dorado);border-bottom-color:var(--dorado);background:var(--dorado-dim);}
+
+/* ── FILTROS / FORMS ── */
+.filters-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:15px 20px;}
+.filters-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.filter-group{display:flex;flex-direction:column;gap:4px;}
+.filter-label{font-size:10px;color:var(--muted);text-transform:uppercase;font-family:'Barlow Condensed';letter-spacing:.05em;}
+.filter-select,.edit-input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;font-size:12px;outline:none;font-family:'Barlow',sans-serif;}
+.filter-select:focus,.edit-input:focus{border-color:var(--verde);}
+
+/* ── STATS BAR ── */
+.stats{display:flex;gap:25px;padding:15px 20px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.stat-n{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--dorado);}
+.stat-l{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-left:6px;}
+
+/* ── GRID JUGADORES ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;padding:20px;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;cursor:pointer;padding:20px;position:relative;transition:all .2s;border-left:6px solid transparent;}
+.card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.5);border-color:var(--verde);}
+.cat-badge{position:absolute;top:0;right:0;padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;border-bottom-left-radius:12px;color:white;text-transform:uppercase;}
+.card-nombre{font-size:15px;font-weight:800;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;line-height:1.3;margin-bottom:8px;padding-right:80px;}
+.card-info{font-size:11px;color:var(--muted);margin-bottom:10px;}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
+.active-dot{background:var(--verde);box-shadow:0 0 8px var(--verde-glow);}
+.inactive-dot{background:var(--red);}
+.cuota-badge{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.cuota-pill{font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;font-family:'Barlow Condensed';text-transform:uppercase;}
+.cuota-ok{background:var(--verde-dim);color:#6de097;border:1px solid var(--verde-border);}
+.cuota-debe{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);}
+.cuota-none{background:var(--surface);color:var(--muted);border:1px solid var(--border);}
+.cuota-vence{background:var(--dorado-dim);color:var(--dorado-lite);border:1px solid var(--dorado-border);}
+
+/* ── ASISTENCIAS ── */
+.asist-container{padding:25px;max-width:1000px;margin:0 auto;}
+.asist-selector{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;background:var(--surface2);padding:20px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
+.asist-lista{background:var(--surface2);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+.asist-lista-header{background:var(--surface);padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
+.asist-lista-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;color:var(--dorado);}
+.asist-row{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);}
+.asist-row:hover{background:var(--surface);}
+.asist-nombre{font-weight:700;font-size:14px;text-transform:uppercase;font-family:'Barlow Condensed';}
+.asist-info{font-size:11px;color:var(--muted);margin-top:2px;}
+.toggle-asist{width:52px;height:28px;border-radius:14px;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.toggle-asist.presente{background:var(--verde);}
+.toggle-asist.ausente{background:var(--border);}
+.toggle-asist::after{content:'';position:absolute;width:22px;height:22px;border-radius:50%;background:white;top:3px;transition:left .2s;}
+.toggle-asist.presente::after{left:27px;}
+.toggle-asist.ausente::after{left:3px;}
+.asist-stats-bar{display:flex;gap:20px;padding:15px 20px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.asist-stat{text-align:center;}
+.asist-stat-n{font-family:'Barlow Condensed';font-size:22px;font-weight:800;}
+.asist-stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;}
+.asist-search-bar{padding:10px 20px;background:var(--bg);border-bottom:1px solid var(--border);}
+.asist-search-bar input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;font-size:12px;outline:none;font-family:'Barlow',sans-serif;}
+.asist-search-bar input:focus{border-color:var(--verde);}
+
+/* ── CUOTAS ── */
+.cuotas-container{padding:20px;max-width:1200px;margin:0 auto;}
+.cuotas-topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--surface2);padding:18px 20px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
+.cuotas-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.res-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+.res-n{font-family:'Barlow Condensed';font-size:28px;font-weight:800;}
+.res-l{font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;}
+.cuotas-table-wrap{background:var(--surface2);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+.cuotas-table-header{background:var(--surface);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+.cuotas-table-title{font-family:'Barlow Condensed';font-size:15px;font-weight:800;text-transform:uppercase;color:var(--dorado);}
+.ct-header-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr auto;gap:12px;padding:10px 20px;background:var(--bg);border-bottom:1px solid var(--border);}
+.ct-header-cell{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-family:'Barlow Condensed';}
+.ct-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1fr auto;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);}
+.ct-row:hover{background:var(--surface);}
+.ct-nombre{font-weight:700;font-size:13px;text-transform:uppercase;font-family:'Barlow Condensed';}
+.ct-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── ADMIN ── */
+.admin-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:25px;padding:25px;}
+.admin-card{background:var(--surface2);padding:20px;border-radius:12px;border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;}
+.admin-title{font-family:'Barlow Condensed';color:var(--dorado);font-size:18px;font-weight:800;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.item-list{max-height:250px;overflow-y:auto;margin-top:10px;}
+.item-row{display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:6px;margin-bottom:6px;font-size:13px;}
+.item-row:hover{background:var(--surface);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);width:100%;max-width:900px;border-radius:15px;max-height:95vh;overflow-y:auto;border:1px solid var(--verde);}
+.modal-sm{max-width:480px;}
+.modal-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(135deg,var(--verde-dark) 0%,var(--surface) 100%);}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--dorado);text-transform:uppercase;}
+.modal-subtitle{font-size:12px;color:var(--muted);margin-top:4px;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:30px;cursor:pointer;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:25px;}
+.modal-section{margin-bottom:25px;}
+.modal-section-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:6px;letter-spacing:.05em;}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
+.modal-field{display:flex;flex-direction:column;gap:4px;}
+.modal-field.full{grid-column:1/-1;}
+.modal-field-label{font-size:10px;color:var(--muted);text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em;}
+.modal-field-value{background:var(--bg);border:1px solid var(--border);padding:10px 12px;border-radius:6px;font-size:13px;min-height:40px;display:flex;align-items:center;}
+.hist-cuota-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg);border-radius:8px;margin-bottom:6px;border:1px solid var(--border);}
+.hist-periodo{font-family:'Barlow Condensed';font-weight:800;font-size:13px;}
+.hist-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.hist-monto{font-family:'Barlow Condensed';font-weight:800;font-size:15px;color:#6de097;}
+.stat-asist-box{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.stat-asist-item{background:var(--bg);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border);}
+.stat-asist-n{font-family:'Barlow Condensed';font-size:26px;font-weight:800;}
+.stat-asist-l{font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+.hist-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.hist-dot{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'Barlow Condensed';}
+.hist-dot.p{background:var(--verde-dim);color:#6de097;border:1px solid var(--verde-border);}
+.hist-dot.a{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);}
+
+/* ── BOTONES ── */
+.btn{padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:700;font-family:'Barlow Condensed';border:none;text-transform:uppercase;font-size:12px;transition:all .2s;letter-spacing:.05em;}
+.btn-save{background:var(--verde);color:white;}
+.btn-save:hover{background:var(--verde-dark);}
+.btn-secondary{background:var(--surface2);color:var(--text);}
+.btn-secondary:hover{background:var(--surface);}
+.btn-orange{background:var(--orange);color:white;}
+.btn-orange:hover{background:#ea580c;}
+.btn-gold{background:var(--dorado);color:#0a0d0a;font-weight:800;}
+.btn-gold:hover{background:var(--dorado-lite);}
+.btn-purple{background:var(--purple);color:#0a0d0a;}
+.btn-yellow{background:var(--yellow);color:#0a0d0a;}
+.icon-btn{background:none;border:none;cursor:pointer;padding:4px 8px;font-size:13px;color:var(--muted);}
+.btn-tel{padding:5px 10px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;color:white;display:inline-flex;align-items:center;gap:4px;background:var(--verde);}
+.btn-wa{padding:5px 10px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;color:white;display:inline-flex;align-items:center;gap:4px;background:#25D366;}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:4000;}
+.spinner{width:50px;height:50px;border:4px solid var(--surface2);border-top-color:var(--verde);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-text{margin-top:15px;font-size:13px;color:var(--muted);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state p{font-family:'Barlow Condensed';font-size:16px;text-transform:uppercase;margin-top:10px;}
+
+/* ── CONFIG PERIODOS ── */
+.config-pagos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px;margin-top:15px;}
+.periodo-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.periodo-card.activo{border-color:var(--verde);}
+.periodo-card.vencido{border-color:var(--red);}
+.periodo-card.proximo{border-color:var(--dorado);}
+
+@media(max-width:650px){
+  .ct-row,.ct-header-row{grid-template-columns:1fr 1fr auto;}
+  .ct-row>*:nth-child(3),.ct-row>*:nth-child(4),.ct-header-row>*:nth-child(3),.ct-header-row>*:nth-child(4){display:none;}
+  .modal-grid{grid-template-columns:1fr;}
+  .asist-selector{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="loader"><div class="spinner"></div><p id="loader-msg" class="loader-text">Cargando...</p></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <img class="login-escudo"
+      src="https://drive.google.com/thumbnail?id=1e6tSG1WlG-YC9Mj9ShPnAViIJvHDhftX&sz=w200"
+      alt="Excursionistas"
+      onerror="this.style.display='none'">
+    <div class="logo" style="margin-bottom:6px;justify-content:center;">
+      EXCURSIONISTAS <span>FC</span>
+    </div>
+    <p style="color:var(--muted);font-size:11px;margin-bottom:20px;text-transform:uppercase;letter-spacing:.1em;">Sistema de Gestion</p>
+    <input type="password" id="passInput" placeholder="CONTRASENA" onkeyup="if(event.key==='Enter')intentarLogin()">
+    <button class="btn btn-save" style="width:100%" onclick="intentarLogin()">INGRESAR</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <img src="https://drive.google.com/thumbnail?id=1e6tSG1WlG-YC9Mj9ShPnAViIJvHDhftX&sz=w100"
+         alt="CAE" onerror="this.style.display='none'">
+    EXCURSIONISTAS <span>FC</span>
+  </div>
+  <button class="btn btn-secondary" onclick="inicializar()">⟳ RECARGAR</button>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="cambiarTab(event,'jugadores')">SOCIOS</div>
+  <div class="tab" onclick="cambiarTab(event,'asistencias')">ASISTENCIAS</div>
+  <div class="tab" onclick="cambiarTab(event,'cuotas')">CUOTAS</div>
+  <div class="tab" onclick="cambiarTab(event,'admin')">ADMINISTRACION</div>
+</div>
+
+<!-- ══ TAB SOCIOS ══════════════════════════════════════ -->
+<div id="tab-jugadores" class="tab-content">
+  <div class="filters-bar"><div class="filters-row">
+    <div class="filter-group" style="flex:1;min-width:140px;"><label class="filter-label">Buscador</label>
+      <input type="text" id="busq" class="filter-select" placeholder="Nombre o DNI..." oninput="renderPlayers()"></div>
+    <div class="filter-group"><label class="filter-label">Estado</label>
+      <select id="fEstado" class="filter-select" onchange="renderPlayers()">
+        <option value="">Todos</option><option value="Activos">Solo Activos</option><option value="Inactivos">Solo Inactivos</option></select></div>
+    <div class="filter-group"><label class="filter-label">Genero</label>
+      <select id="fGen" class="filter-select" onchange="renderPlayers()">
+        <option value="">Todos</option><option>Masculino</option><option>Femenino</option></select></div>
+    <div class="filter-group"><label class="filter-label">Categoria</label>
+      <select id="fCat" class="filter-select" onchange="renderPlayers()"><option value="">Todas</option></select></div>
+    <div class="filter-group"><label class="filter-label">Cuota</label>
+      <select id="fCuota" class="filter-select" onchange="renderPlayers()">
+        <option value="">Todas</option><option value="ok">Al dia</option><option value="debe">Debe</option><option value="vence">Por vencer</option><option value="none">Sin plan</option></select></div>
+    <button class="btn btn-orange" onclick="autoCategorizarTodo()">AUTO-CATEGORIZAR</button>
+  </div></div>
+  <div class="stats">
+    <div><span class="stat-n" id="statT">0</span><small class="stat-l">TOTAL</small></div>
+    <div><span class="stat-n" id="statM">0</span><small class="stat-l">MASC.</small></div>
+    <div><span class="stat-n" id="statF">0</span><small class="stat-l">FEM.</small></div>
+    <div><span class="stat-n" id="statD" style="color:var(--red)">0</span><small class="stat-l">DEBEN HOY</small></div>
+    <div><span class="stat-n" id="statV" style="color:var(--dorado)">0</span><small class="stat-l">POR VENCER</small></div>
+  </div>
+  <div id="gridJugadores" class="grid"></div>
+</div>
+
+<!-- ══ TAB ASISTENCIAS ════════════════════════════════ -->
+<div id="tab-asistencias" class="tab-content" style="display:none;">
+  <div class="asist-container">
+    <div class="asist-selector">
+      <div class="filter-group"><label class="filter-label">Fecha</label><input type="date" id="asistFecha" class="filter-select"></div>
+      <div class="filter-group"><label class="filter-label">Turno</label>
+        <select id="asistTurno" class="filter-select"><option value="">-- Sin turno específico --</option></select></div>
+      <div class="filter-group"><label class="filter-label">Categoria</label>
+        <select id="asistCat" class="filter-select"><option value="">Todas</option></select></div>
+      <button class="btn btn-gold" onclick="cargarListaAsist()">CARGAR</button>
+    </div>
+    <div id="asistContenido"><div class="empty-state"><p>Selecciona fecha y turno o categoria</p></div></div>
+  </div>
+</div>
+
+<!-- ══ TAB CUOTAS ══════════════════════════════════════ -->
+<div id="tab-cuotas" class="tab-content" style="display:none;">
+  <div class="cuotas-container">
+    <div class="cuotas-topbar">
+      <div class="filter-group"><label class="filter-label">Periodo</label><select id="cPeriodo" class="filter-select" onchange="renderCuotas()"></select></div>
+      <div class="filter-group"><label class="filter-label">Estado</label>
+        <select id="cFiltro" class="filter-select" onchange="renderCuotas()">
+          <option value="">Todos</option><option value="debe">Deudores</option><option value="ok">Al dia</option><option value="vence">Por vencer</option><option value="sinplan">Sin plan</option></select></div>
+      <div class="filter-group"><label class="filter-label">Categoria</label>
+        <select id="cFiltrocat" class="filter-select" onchange="renderCuotas()"><option value="">Todas</option></select></div>
+      <div class="filter-group" style="flex:1;min-width:130px;"><label class="filter-label">Buscar</label>
+        <input type="text" id="cBusq" class="filter-select" placeholder="Nombre o DNI..." oninput="renderCuotas()"></div>
+      <button class="btn btn-yellow" onclick="exportarCSV()">EXPORTAR CSV</button>
+      <button class="btn btn-save" onclick="marcarTodosMes()">MARCAR TODOS PAGADOS</button>
+    </div>
+    <div class="cuotas-resumen">
+      <div class="res-card"><div class="res-n" id="rc-total" style="color:var(--dorado)">0</div><div class="res-l">Con plan</div></div>
+      <div class="res-card"><div class="res-n" id="rc-pagaron" style="color:#6de097">0</div><div class="res-l">Pagaron</div></div>
+      <div class="res-card"><div class="res-n" id="rc-deben" style="color:var(--red)">0</div><div class="res-l">Deben</div></div>
+      <div class="res-card"><div class="res-n" id="rc-vence" style="color:var(--dorado-lite)">0</div><div class="res-l">Por vencer</div></div>
+      <div class="res-card"><div class="res-n" id="rc-recaudado" style="color:var(--dorado-lite)">$0</div><div class="res-l">Recaudado</div></div>
+      <div class="res-card"><div class="res-n" id="rc-esperado" style="color:var(--purple)">$0</div><div class="res-l">Esperado</div></div>
+    </div>
+    <div class="cuotas-table-wrap">
+      <div class="cuotas-table-header"><span class="cuotas-table-title" id="cuotas-table-title">Cuotas del mes</span></div>
+      <div class="ct-header-row">
+        <span class="ct-header-cell">Socio</span><span class="ct-header-cell">Estado</span>
+        <span class="ct-header-cell">Plan</span><span class="ct-header-cell">Monto</span>
+        <span class="ct-header-cell">Vigente hasta</span><span class="ct-header-cell"></span>
+      </div>
+      <div id="cuotasLista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB ADMIN ══════════════════════════════════════ -->
+<div id="tab-admin" class="tab-content" style="display:none;">
+  <div class="admin-container">
+    <div class="admin-card">
+      <h3 class="admin-title">PROFESORES / ENTRENADORES</h3>
+      <div style="display:flex;gap:10px;"><input type="text" id="addP" class="edit-input" placeholder="Nombre completo..."><button class="btn btn-save" onclick="crearSimple('Profesores','addP')">+</button></div>
+      <div id="listP" class="item-list"></div>
+    </div>
+    <div class="admin-card">
+      <h3 class="admin-title">SEDES / CANCHAS</h3>
+      <div style="display:flex;gap:10px;"><input type="text" id="addS" class="edit-input" placeholder="Nombre de la sede..."><button class="btn btn-save" onclick="crearSimple('Sedes','addS')">+</button></div>
+      <div id="listS" class="item-list"></div>
+    </div>
+    <div class="admin-card">
+      <h3 class="admin-title">PLANES DE CUOTA</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
+        <div class="filter-group"><label class="filter-label">Nombre</label><input type="text" id="planNom" class="edit-input" placeholder="Ej: Futsal 2x/sem"></div>
+        <div class="filter-group"><label class="filter-label">Monto $</label><input type="number" id="planMonto" class="edit-input" placeholder="0"></div>
+        <button class="btn btn-save" id="btnPlan" onclick="guardarPlan()" style="align-self:flex-end;">+</button>
+      </div>
+      <div id="listPlanes" class="item-list"></div>
+    </div>
+    <div class="admin-card" id="cardCat">
+      <h3 class="admin-title">CATEGORIAS (por anio nac.)</h3>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Los anos son de nacimiento. Ej: para chicos nacidos entre 2010 y 2012 → Desde 2010, Hasta 2012.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <input type="text" id="cNom" class="edit-input" placeholder="Nombre cat.">
+        <input type="color" id="cCol" value="#1a7a3c" style="width:100%;height:40px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--bg);">
+        <div class="filter-group"><label class="filter-label">Ano nac. DESDE</label><input type="number" id="cMin" class="edit-input" placeholder="Ej: 2005" min="1990" max="2025"></div>
+        <div class="filter-group"><label class="filter-label">Ano nac. HASTA</label><input type="number" id="cMax" class="edit-input" placeholder="Ej: 2007" min="1990" max="2025"></div>
+        <select id="cGen" class="edit-input" style="grid-column:span 2;"><option>Masculino</option><option>Femenino</option><option>Mixto</option></select>
+      </div>
+      <button class="btn btn-save" id="btnCat" onclick="guardarCat()">GUARDAR CATEGORIA</button>
+      <div id="listCat" class="item-list"></div>
+    </div>
+    <div class="admin-card" style="grid-column:1/-1;">
+      <h3 class="admin-title">HORARIOS / TURNOS</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;">
+        <select id="hDia" class="filter-select"><option>Lunes</option><option>Martes</option><option>Miercoles</option><option>Jueves</option><option>Viernes</option><option>Sabado</option><option>Domingo</option></select>
+        <input type="time" id="hHora" class="filter-select">
+        <select id="hSede" class="filter-select"></select>
+        <select id="hCat" class="filter-select"></select>
+        <select id="hProfe" class="filter-select" multiple style="height:40px;"></select>
+      </div>
+      <button class="btn btn-save" style="margin-top:10px" onclick="crearHorario()">CREAR TURNO</button>
+      <div id="listH" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px;margin-top:15px;"></div>
+    </div>
+    <div class="admin-card" style="grid-column:1/-1;">
+      <h3 class="admin-title">CONFIG. PERIODOS DE PAGO</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Define los periodos del anio. Por defecto arrancan el dia 1 y terminan el último dia del mes.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--bg);padding:15px;border-radius:8px;border:1px solid var(--border);">
+        <div class="filter-group"><label class="filter-label">Mes</label>
+          <select id="cpMes" class="filter-select">
+            <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+            <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+            <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select></div>
+        <div class="filter-group"><label class="filter-label">Ano Inicio</label><input type="number" id="cpAnioD" class="filter-select" style="width:90px;" placeholder="2026"></div>
+        <div class="filter-group"><label class="filter-label">Dia Inicio</label><input type="number" id="cpDiaD" class="filter-select" style="width:70px;" value="1" min="1" max="31"></div>
+        <div class="filter-group"><label class="filter-label">Ano Fin</label><input type="number" id="cpAnioH" class="filter-select" style="width:90px;" placeholder="2026"></div>
+        <div class="filter-group"><label class="filter-label">Dia Fin</label><input type="number" id="cpDiaH" class="filter-select" style="width:70px;" value="0" min="0" max="31" title="0 = último dia del mes"></div>
+        <div class="filter-group"><label class="filter-label">Dias Gracia</label><input type="number" id="cpGracia" class="filter-select" style="width:70px;" value="5" min="0"></div>
+        <div class="filter-group" style="flex:1;min-width:150px;"><label class="filter-label">Descripción</label><input type="text" id="cpDesc" class="filter-select" placeholder="Ej: Cuota Marzo 2026"></div>
+        <button class="btn btn-save" onclick="agregarPeriodo()">+ AGREGAR</button>
+        <button class="btn btn-orange" onclick="generarPeriodosAnio()">GENERAR ANO COMPLETO</button>
+      </div>
+      <div id="listPeriodos" class="config-pagos-grid"></div>
+      <button class="btn btn-save" style="margin-top:15px;width:100%;" onclick="guardarPeriodos()">GUARDAR CONFIGURACION</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL SOCIO ═══════════════════════════════════ -->
+<div class="modal-overlay" id="modalEdicion">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="m-nombre" class="modal-title">Socio</h3>
+        <p id="m-dni-sub" class="modal-subtitle"></p>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- ASISTENCIA -->
+      <div class="modal-section">
+        <div class="modal-section-title">ASISTENCIA DEL MES</div>
+        <div class="stat-asist-box">
+          <div class="stat-asist-item"><div class="stat-asist-n" id="m-asist-pct" style="color:var(--purple)">-</div><div class="stat-asist-l">% asistencia</div></div>
+          <div class="stat-asist-item"><div class="stat-asist-n" id="m-asist-total" style="color:#6de097">-</div><div class="stat-asist-l">presentes / clases</div></div>
+        </div>
+        <div style="margin-top:12px;"><div class="modal-field-label" style="margin-bottom:6px;">Ultimas clases</div><div class="hist-bar" id="m-hist-bar"></div></div>
+      </div>
+      <!-- CUOTAS -->
+      <div class="modal-section">
+        <div class="modal-section-title">MEMBRESIA / CUOTAS</div>
+        <div id="m-estado-cuota" style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);font-size:13px;"></div>
+        <div class="modal-grid">
+          <div class="modal-field"><label class="modal-field-label">Plan asignado</label>
+            <select id="m-plan" class="edit-input"><option value="">-- Sin plan --</option></select></div>
+          <div class="modal-field" style="justify-content:flex-end;">
+            <button class="btn btn-save" style="width:100%;margin-top:auto;" onclick="guardarPlanJugador()">GUARDAR PLAN</button></div>
+        </div>
+        <div style="margin-top:15px;"><div class="modal-field-label" style="margin-bottom:8px;">Historial de pagos</div>
+          <div id="m-hist-cuotas" style="max-height:220px;overflow-y:auto;"></div></div>
+      </div>
+      <!-- CONTACTO -->
+      <div class="modal-section">
+        <div class="modal-section-title">DATOS DE CONTACTO</div>
+        <div class="modal-grid">
+          <div class="modal-field"><label class="modal-field-label">Email</label><div class="modal-field-value" id="m-email"></div></div>
+          <div class="modal-field"><label class="modal-field-label">Celular</label><div class="modal-field-value" id="m-celular" style="flex-direction:column;align-items:flex-start;gap:6px;"></div></div>
+          <div class="modal-field"><label class="modal-field-label">Domicilio</label><div class="modal-field-value" id="m-domicilio"></div></div>
+          <div class="modal-field"><label class="modal-field-label">Observaciones</label><div class="modal-field-value" id="m-obs" style="color:var(--orange);font-weight:600;"></div></div>
+        </div>
+      </div>
+      <!-- DATOS Y GESTION -->
+      <div class="modal-section">
+        <div class="modal-section-title">DATOS Y GESTION</div>
+        <div class="modal-grid">
+          <div class="modal-field"><label class="modal-field-label">Genero</label><select id="m-genero" class="edit-input" onchange="autoCat()"><option>Masculino</option><option>Femenino</option></select></div>
+          <div class="modal-field"><label class="modal-field-label">Estado</label><select id="m-estado" class="edit-input"><option value="true">ACTIVO</option><option value="false">INACTIVO</option></select></div>
+          <div class="modal-field"><label class="modal-field-label">Anio de nacimiento</label><div class="modal-field-value" id="m-edad"></div></div>
+          <div class="modal-field"><label class="modal-field-label">Categoria</label><div style="display:flex;gap:5px;"><input type="text" id="m-cat-m" class="edit-input" style="flex:1;"><button class="btn btn-orange" style="padding:8px 12px;" onclick="autoCat()">AUTO</button></div></div>
+          <div class="modal-field"><label class="modal-field-label">Membresia (planilla)</label><div class="modal-field-value" id="m-membresia"></div></div>
+          <div class="modal-field"><label class="modal-field-label">Vencimiento (planilla)</label><div class="modal-field-value" id="m-venc-planilla"></div></div>
+        </div>
+      </div>
+      <!-- DOCUMENTACION -->
+      <div class="modal-section">
+        <div class="modal-section-title">DOCUMENTACION</div>
+        <div class="modal-grid">
+          <div class="modal-field">
+            <label class="modal-field-label">Foto Perfil</label>
+            <div id="l-perfil" class="modal-field-value" style="min-height:auto;padding:8px;margin-bottom:8px;"></div>
+            <button class="btn btn-secondary" style="width:100%;padding:10px;font-size:12px;" onclick="document.getElementById('f-perfil').click()">SUBIR FOTO</button>
+            <input type="file" id="f-perfil" accept="image/*" style="display:none;" onchange="subirArchivo('perfil')">
+          </div>
+          <div class="modal-field">
+            <label class="modal-field-label">DNI (imagen)</label>
+            <div id="l-dni" class="modal-field-value" style="min-height:auto;padding:8px;margin-bottom:8px;"></div>
+            <button class="btn btn-secondary" style="width:100%;padding:10px;font-size:12px;" onclick="document.getElementById('f-dni').click()">SUBIR DNI</button>
+            <input type="file" id="f-dni" accept="image/*" style="display:none;" onchange="subirArchivo('dni')">
+          </div>
+          <div class="modal-field">
+            <label class="modal-field-label">Apto Fisico</label>
+            <div id="l-apto" class="modal-field-value" style="min-height:auto;padding:8px;margin-bottom:8px;"></div>
+            <button class="btn btn-secondary" style="width:100%;padding:10px;font-size:12px;" onclick="document.getElementById('f-apto').click()">SUBIR APTO</button>
+            <input type="file" id="f-apto" accept="image/*,application/pdf" style="display:none;" onchange="subirArchivo('apto')">
+          </div>
+        </div></div>
+      </div>
+      <button class="btn btn-save" style="width:100%;padding:14px;font-size:14px;" onclick="guardarJ()">ACTUALIZAR FICHA</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL PAGO ═════════════════════════════════════ -->
+<div class="modal-overlay" id="modalPago">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div><h3 class="modal-title">REGISTRAR PAGO</h3><p id="mp-sub" class="modal-subtitle"></p></div>
+      <button class="modal-close" onclick="cerrarModalPago()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="modal-field"><label class="modal-field-label">Fecha de pago</label><input type="date" id="mp-fecha" class="edit-input"></div>
+        <div class="modal-field"><label class="modal-field-label">Monto $</label><input type="number" id="mp-monto" class="edit-input" placeholder="0"></div>
+        <div class="modal-field"><label class="modal-field-label">Periodo Desde</label><input type="date" id="mp-desde" class="edit-input"></div>
+        <div class="modal-field"><label class="modal-field-label">Periodo Hasta</label><input type="date" id="mp-hasta" class="edit-input"></div>
+        <div class="modal-field"><label class="modal-field-label">Método</label>
+          <select id="mp-metodo" class="edit-input"><option>Efectivo</option><option>Transferencia</option><option>Otro</option></select></div>
+        <div class="modal-field"><label class="modal-field-label">Cobrador</label><select id="mp-cobrador" class="edit-input"></select></div>
+        <div class="modal-field full"><label class="modal-field-label">Observaciones</label><input type="text" id="mp-obs" class="edit-input" placeholder="Opcional..."></div>
+      </div>
+      <button class="btn btn-save" style="width:100%;margin-top:20px;padding:14px;font-size:14px;" onclick="confirmarPago()">CONFIRMAR PAGO</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════════
+var DB={jugadores:[],profesores:[],sedes:[],categorias:[],horarios:[],configPagos:[]};
+var CUOTAS_DB={planes:[],cuotas:[]};
+var TOKEN='',itemSel=null,catEditIdx=null,planEditIdx=null;
+var asistencias=[],asistActual={},pagoCtx=null,PERIODOS_EDIT=[];
+
+// ── MAPEO DE COLUMNAS - Socios Excursionistas Futsal ──────
+// La hoja tiene: Apellido(0), Nombre(1), Email(2), NumTarjeta(3),
+// Telefono(4), Celular(5), Activo(6), TipoDoc(7), DNI(8),
+// FechaNac(9), Sexo(10), Domicilio(11), Observaciones(12),
+// Membresia(13), Vencimiento(14), FechaIngreso(15), Creador(16)
+// Apps Script agrega: Categoria_App(17), Plan(18), Foto(19), DNI_Foto(20), Apto(21)
+// El GAS ademas agrega al FINAL: hoja(f.length-2), fila(f.length-1)
+var COL = {
+  APELLIDO:0, NOMBRE:1, EMAIL:2, TARJETA:3, TEL:4, CELULAR:5,
+  ACTIVO:6, TIPO_DOC:7, DNI:8, FECHA_NAC:9, SEXO:10,
+  DOMICILIO:11, OBS:12, MEMBRESIA:13, VENCIMIENTO:14,
+  FECHA_ING:15, CREADOR:16, CATEGORIA_APP:17, PLAN:18,
+  FOTO:19, DNI_FOTO:20, APTO:21
+};
+
+// ── INICIO ────────────────────────────────────────────────
+function intentarLogin(){TOKEN=document.getElementById('passInput').value;if(!TOKEN)return alert('Ingresa la contrasena');inicializar();}
+function mostrarLoader(m){document.getElementById('loader').style.display='flex';document.getElementById('loader-msg').innerText=m;}
+function ocultarLoader(){document.getElementById('loader').style.display='none';}
+
+function inicializar(){
+  if(!TOKEN)return;
+  mostrarLoader('Cargando socios...');
+  // Paso 1: cargar socios primero y mostrar la app de inmediato
+  google.script.run
+    .withSuccessHandler(function(raw){
+      var d=JSON.parse(raw);
+      if(d.error){alert(d.error);ocultarLoader();return;}
+      document.getElementById('login-screen').style.display='none';
+      DB=d;
+      // Mostrar jugadores de inmediato sin esperar asistencias/cuotas
+      renderPlayers();
+      poblarSelects();poblarTurnosAsist();poblarPeriodos();
+      renderList('listP',DB.profesores,'Profesores');
+      renderList('listS',DB.sedes,'Sedes');
+      renderListCat();renderHorarios();renderListPlanes();
+      PERIODOS_EDIT=DB.configPagos.map(function(r){return{mes:r[0],anioD:r[1],diaD:r[2],anioH:r[3],diaH:r[4],gracia:r[5],desc:r[6]};});
+      renderPeriodosAdmin();
+      document.getElementById('asistFecha').value=new Date().toISOString().split('T')[0];
+      ocultarLoader();
+      // Paso 2: cargar asistencias y cuotas en background (sin bloquear la UI)
+      document.getElementById('statD').title='Cargando cuotas...';
+      var pendientes=2;
+      function finCarga(){
+        if(--pendientes===0){
+          // Refrescar stats ahora que tenemos todo
+          renderPlayers();
+        }
+      }
+      google.script.run
+        .withSuccessHandler(function(r){asistencias=JSON.parse(r);finCarga();})
+        .withFailureHandler(function(){finCarga();})
+        .getAsistencias(TOKEN);
+      google.script.run
+        .withSuccessHandler(function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();finCarga();})
+        .withFailureHandler(function(){finCarga();})
+        .getCuotas(TOKEN);
+    })
+    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
+    .getData(TOKEN);
+}
+
+function renderAll(){
+  renderPlayers();
+  renderList('listP',DB.profesores,'Profesores');
+  renderList('listS',DB.sedes,'Sedes');
+  renderListCat();renderHorarios();renderListPlanes();
+  poblarSelects();poblarTurnosAsist();poblarPeriodos();
+  PERIODOS_EDIT=DB.configPagos.map(function(r){return{mes:r[0],anioD:r[1],diaD:r[2],anioH:r[3],diaH:r[4],gracia:r[5],desc:r[6]};});
+  renderPeriodosAdmin();
+  document.getElementById('asistFecha').value=new Date().toISOString().split('T')[0];
+}
+
+// ── HELPERS FECHA ────────────────────────────────────────
+function parseDate(s){if(!s)return null;var str=s.toString();if(str.includes('/')){var p=str.split('/');return new Date(p[2],p[1]-1,p[0]);}var d=new Date(str);return isNaN(d)?null:d;}
+function formatDate(d){if(!d)return'';return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();}
+function ultimoDiaMes(a,m){return new Date(a,m,0).getDate();}
+function nombreMes(n){return['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][n];}
+
+// Extraer anio de nacimiento de un string de fecha
+function extraerAnioNac(fStr){
+  if(!fStr)return null;
+  var s=fStr.toString();
+  // dd/mm/yyyy
+  if(s.includes('/')){var p=s.split('/');if(p.length===3)return parseInt(p[2]);}
+  // yyyy-mm-dd
+  var m=s.match(/(\d{4})/);return m?parseInt(m[1]):null;
+}
+
+// ── PERIODOS DE PAGO ────────────────────────────────────
+function getFechaDesde(p){return new Date(p.anioD,p.mes-1,parseInt(p.diaD)||1);}
+function getFechaHasta(p){var anioH=p.anioH||p.anioD,diaH=parseInt(p.diaH)||0;if(diaH===0)diaH=ultimoDiaMes(anioH,p.mes);return new Date(anioH,p.mes-1,diaH);}
+function getFechaVenc(p){var v=new Date(getFechaHasta(p));v.setDate(v.getDate()+(parseInt(p.gracia)||0));return v;}
+
+function estadoCuotaV2(f){
+  if(!getPlanJ(f))return{estado:'none',hasta:null};
+  var hoy=new Date();hoy.setHours(0,0,0,0);
+  var dni=(f[COL.DNI]||'').toString();
+  var pagos=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;});
+  var mejor=null;
+  pagos.forEach(function(c){var hasta=parseDate(c[4]);if(hasta&&hasta>=hoy){if(!mejor||hasta>parseDate(mejor[4]))mejor=c;}});
+  if(mejor){var hasta=parseDate(mejor[4]);var dias7=new Date(hoy);dias7.setDate(dias7.getDate()+7);return{estado:hasta<=dias7?'vence':'ok',hasta:hasta};}
+  return{estado:'debe',hasta:null};
+}
+
+// ── PLANES ──────────────────────────────────────────────
+function getPlanJ(f){return(f[COL.PLAN]||'').toString().trim();}
+function getPlanObj(n){return CUOTAS_DB.planes.find(function(p){return p[0]===n;});}
+function periodoLabel(p){var a=p.split('-');var m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return m[parseInt(a[1])-1]+' '+a[0];}
+
+// ── RENDER SOCIOS ────────────────────────────────────────
+function renderPlayers(){
+  var busq=document.getElementById('busq').value.toLowerCase();
+  var genF=document.getElementById('fGen').value,catF=document.getElementById('fCat').value;
+  var estF=document.getElementById('fEstado').value,cuotaF=document.getElementById('fCuota').value;
+  var grid=document.getElementById('gridJugadores');
+  var t=0,m=0,fc=0,deu=0,pv=0,html='';
+  DB.jugadores.slice(1).forEach(function(f,i){
+    var apellido=f[COL.APELLIDO]||'',nombre=f[COL.NOMBRE]||'';
+    var nom=apellido+', '+nombre;
+    var dni=(f[COL.DNI]||f[COL.TARJETA]||'').toString();
+    var gen=f[COL.SEXO]||'Masculino';
+    var activoRaw=f[COL.ACTIVO];
+    var act=(activoRaw===true||String(activoRaw).toLowerCase()==='si'||String(activoRaw).toLowerCase()==='true');
+    var cat=String(f[COL.CATEGORIA_APP]||'').trim()||'Sin Cat.';
+    var anioNac=extraerAnioNac(f[COL.FECHA_NAC]);
+    var apto=f[COL.APTO]&&f[COL.APTO].toString().trim()!=='';
+    var catObj=DB.categorias.find(function(c){return c[0]===cat;});
+    var cc=catObj?catObj[1]:'transparent';
+    var cv=estadoCuotaV2(f),est=cv.estado;
+    if(!(nom.toLowerCase().includes(busq)||dni.includes(busq)))return;
+    if(genF&&gen!==genF)return;
+    if(catF&&cat!==catF)return;
+    if(estF==='Activos'&&!act)return;
+    if(estF==='Inactivos'&&act)return;
+    if(cuotaF&&cuotaF!==est)return;
+    t++;if(gen==='Masculino')m++;if(gen==='Femenino')fc++;
+    if(act&&est==='debe')deu++;if(act&&est==='vence')pv++;
+    var st=getStatsJ(dni),pc=st.pct>=75?'var(--verde)':st.pct>=50?'var(--orange)':'var(--red)';
+    var pl=getPlanJ(f),po=getPlanObj(pl),ms=po?'$'+Number(po[1]).toLocaleString('es-AR'):'';
+    var cl=est==='ok'?'cuota-ok':est==='debe'?'cuota-debe':est==='vence'?'cuota-vence':'cuota-none';
+    var lb=est==='ok'?'Al dia':est==='debe'?'DEBE':est==='vence'?'POR VENCER':'Sin plan';
+    if((est==='ok'||est==='vence')&&cv.hasta)lb+=' '+formatDate(cv.hasta);
+    var bc=cc!=='transparent'?cc:'var(--verde)';
+    // Rango anios de la categoria
+    var rango=catObj?' ('+catObj[2]+'-'+catObj[3]+')':'';
+    html+='<div class="card" onclick="abrirM('+(i+1)+')" style="border-left-color:'+bc+'">';
+    html+='<div class="cat-badge" style="background:'+bc+'">'+cat+rango+'</div>';
+    html+='<h4 class="card-nombre">'+apellido+'<br><span style="font-size:12px;color:var(--muted);">'+nombre+'</span></h4>';
+    html+='<p class="card-info">DNI: '+dni+(anioNac?' | Nac. '+anioNac:'')+'</p>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+    html+='<div><span class="status-dot '+(act?'active-dot':'inactive-dot')+'"></span>';
+    html+='<span style="font-size:11px;font-weight:600;text-transform:uppercase;">'+(act?'ACTIVO':'INACTIVO')+'</span></div>';
+    var as=apto?'background:var(--verde-dim);color:#6de097;border:1px solid var(--verde-border);':'background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);';
+    html+='<div style="font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;'+as+'">'+(apto?'APTO OK':'SIN APTO')+'</div></div>';
+    html+='<div class="cuota-badge"><span class="cuota-pill '+cl+'">'+lb+'</span>';
+    html+='<span style="font-size:11px;color:var(--muted);">'+(pl?pl+' '+ms:'')+'</span></div>';
+    if(st.total>0){html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;">';
+      html+='<span style="font-size:10px;color:var(--muted);text-transform:uppercase;">Asistencia mes</span>';
+      html+='<span style="font-size:13px;font-weight:800;color:'+pc+';">'+st.pct+'%</span></div>';}
+    html+='</div>';
+  });
+  grid.innerHTML=html;
+  var _s=function(id,v){var el=document.getElementById(id);if(el)el.innerText=v;};
+  _s('statT',t);_s('statM',m);_s('statF',fc);_s('statD',deu);_s('statV',pv);
+}
+
+// ── CUOTAS ───────────────────────────────────────────────
+function poblarPeriodos(){
+  var sel=document.getElementById('cPeriodo'),now=new Date(),opts='';
+  for(var i=0;i<12;i++){var d=new Date(now.getFullYear(),now.getMonth()-i,1);var v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');opts+='<option value="'+v+'"'+(i===0?' selected':'')+'>'+periodoLabel(v)+'</option>';}
+  sel.innerHTML=opts;
+}
+
+function renderCuotas(){
+  var filt=document.getElementById('cFiltro').value,fcat=document.getElementById('cFiltrocat').value;
+  var busq=document.getElementById('cBusq').value.toLowerCase(),per=document.getElementById('cPeriodo').value;
+  document.getElementById('cuotas-table-title').innerText='Cuotas - '+periodoLabel(per);
+  var act=DB.jugadores.slice(1).filter(function(f){var a=f[COL.ACTIVO];return a===true||String(a).toLowerCase()==='si'||String(a).toLowerCase()==='true';});
+  var tc=0,pa=0,de=0,pv=0,re=0,es=0,rows=[];
+  act.forEach(function(f){
+    var nom=(f[COL.APELLIDO]+' '+f[COL.NOMBRE]||'').toLowerCase();
+    var dni=(f[COL.DNI]||f[COL.TARJETA]||'').toString(),cat=f[COL.CATEGORIA_APP]||'';
+    var pl=getPlanJ(f),po=getPlanObj(pl),mo=po?Number(po[1]):0;
+    var cv=estadoCuotaV2(f),est=cv.estado;
+    var pagos=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;});
+    var ult=pagos.length?pagos[pagos.length-1]:null;
+    var pagado=ult?Number(ult[6]||0):0,fp=ult?ult[5]||'':'';
+    if(filt==='sinplan'&&pl)return;
+    if(filt==='ok'&&est!=='ok')return;
+    if(filt==='debe'&&est!=='debe')return;
+    if(filt==='vence'&&est!=='vence')return;
+    if(!filt&&!pl)return;
+    if(fcat&&cat!==fcat)return;
+    if(busq&&!nom.includes(busq)&&!dni.includes(busq))return;
+    if(pl){tc++;es+=mo;if(est==='ok'){pa++;re+=pagado;}else if(est==='vence'){pv++;re+=pagado;}else de++;}
+    rows.push({f:f,pl:pl,mo:mo,est:est,hasta:cv.hasta,pagado:pagado,fp:fp});
+  });
+  document.getElementById('rc-total').innerText=tc;
+  document.getElementById('rc-pagaron').innerText=pa;
+  document.getElementById('rc-deben').innerText=de;
+  document.getElementById('rc-vence').innerText=pv;
+  document.getElementById('rc-recaudado').innerText='$'+re.toLocaleString('es-AR');
+  document.getElementById('rc-esperado').innerText='$'+es.toLocaleString('es-AR');
+  var lista=document.getElementById('cuotasLista');
+  if(!rows.length){lista.innerHTML='<div class="empty-state"><p>Sin resultados</p></div>';return;}
+  window._cuotaRows=rows;
+  var html='';
+  rows.forEach(function(it,idx){
+    var f=it.f;
+    var cl=it.est==='ok'?'cuota-ok':it.est==='debe'?'cuota-debe':it.est==='vence'?'cuota-vence':'cuota-none';
+    var lb=it.est==='ok'?'Al dia':it.est==='debe'?'DEBE':it.est==='vence'?'POR VENCER':'Sin plan';
+    html+='<div class="ct-row">';
+    html+='<div><div class="ct-nombre">'+(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'')+'</div><div class="ct-sub">DNI: '+(f[COL.DNI]||f[COL.TARJETA]||'')+' | '+(f[COL.CATEGORIA_APP]||'Sin cat.')+'</div></div>';
+    html+='<div><span class="cuota-pill '+cl+'">'+lb+'</span></div>';
+    html+='<div><div style="font-size:12px;font-weight:600;">'+(it.pl||'-')+'</div><div class="ct-sub">'+(it.mo?'$'+it.mo.toLocaleString('es-AR'):'')+'</div></div>';
+    html+='<div style="font-size:13px;font-weight:700;">'+(it.pagado?'$'+it.pagado.toLocaleString('es-AR'):'-')+'</div>';
+    html+='<div style="font-size:12px;color:var(--muted);">'+(it.hasta?formatDate(it.hasta):'-')+'</div>';
+    html+='<div><button class="btn btn-save" style="padding:6px 10px;font-size:11px;" data-idx="'+idx+'" data-action="cobrar">COBRAR</button></div>';
+    html+='</div>';
+  });
+  lista.innerHTML=html;
+  lista.onclick=function(e){
+    var btn=e.target.closest('[data-action]');if(!btn)return;
+    var it=window._cuotaRows[parseInt(btn.dataset.idx)];
+    if(it)abrirModalPago(it.f[COL.DNI]||it.f[COL.TARJETA],it.f[COL.APELLIDO]+' '+it.f[COL.NOMBRE],it.pl,it.f[it.f.length-2],it.mo);
+  };
+}
+
+function abrirModalPago(dni,nom,pl,hoja,mo){
+  pagoCtx={dni:dni,nombre:nom,planNom:pl,hoja:hoja};
+  document.getElementById('mp-sub').innerText=nom+(pl?' - '+pl:'');
+  var now=new Date();
+  document.getElementById('mp-fecha').value=now.toISOString().split('T')[0];
+  document.getElementById('mp-desde').value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  document.getElementById('mp-hasta').value=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
+  document.getElementById('mp-monto').value=mo||'';
+  document.getElementById('mp-obs').value='';
+  document.getElementById('mp-cobrador').innerHTML=DB.profesores.map(function(p){return'<option>'+p[0]+'</option>';}).join('')||'<option>Sin especificar</option>';
+  document.getElementById('modalPago').classList.add('open');
+}
+function cerrarModalPago(){document.getElementById('modalPago').classList.remove('open');pagoCtx=null;}
+
+function confirmarPago(){
+  if(!pagoCtx)return;
+  var desde=document.getElementById('mp-desde').value,hasta=document.getElementById('mp-hasta').value;
+  var p={dni:pagoCtx.dni,nombre:pagoCtx.nombre,plan:pagoCtx.planNom,periodoDesde:desde,periodoHasta:hasta,
+    fechaPago:document.getElementById('mp-fecha').value,monto:document.getElementById('mp-monto').value,
+    metodo:document.getElementById('mp-metodo').value,cobrador:document.getElementById('mp-cobrador').value,
+    obs:document.getElementById('mp-obs').value,hojaOrigen:pagoCtx.hoja};
+  if(!p.fechaPago||!p.monto||!desde||!hasta)return alert('Completa todos los campos');
+  mostrarLoader('Registrando pago...');
+  google.script.run
+    .withSuccessHandler(function(){
+      CUOTAS_DB.cuotas.push([p.dni,p.nombre,p.plan,p.periodoDesde,p.periodoHasta,p.fechaPago,p.monto,p.metodo,p.cobrador,p.obs,p.hojaOrigen,Date.now()]);
+      cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();
+    })
+    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
+    .registrarPago(p,TOKEN);
+}
+
+function marcarTodosMes(){
+  if(!confirm('Marcar como pagados TODOS los que deben?'))return;
+  var pend=DB.jugadores.slice(1).filter(function(f){
+    var a=f[COL.ACTIVO];
+    return(a===true||String(a).toLowerCase()==='si'||String(a).toLowerCase()==='true')&&getPlanJ(f)&&estadoCuotaV2(f).estado==='debe';
+  });
+  if(!pend.length)return alert('Todos ya estan al dia.');
+  var now=new Date();
+  var desde=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+  var hasta=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
+  mostrarLoader('Registrando '+pend.length+' pagos...');
+  var done=0;
+  pend.forEach(function(f){
+    var pl=getPlanJ(f),po=getPlanObj(pl);
+    var p={dni:f[COL.DNI]||f[COL.TARJETA],nombre:f[COL.APELLIDO]+' '+f[COL.NOMBRE],plan:pl,periodoDesde:desde,periodoHasta:hasta,
+      fechaPago:new Date().toISOString().split('T')[0],monto:po?po[1]:0,metodo:'Efectivo',cobrador:'',obs:'Marcado masivo',hojaOrigen:f[f.length-2]};
+    google.script.run.withSuccessHandler(function(){if(++done===pend.length){ocultarLoader();inicializar();}}).registrarPago(p,TOKEN);
+  });
+}
+
+function exportarCSV(){
+  var rows=['Apellido,Nombre,DNI,Categoria,Plan,Estado,Vigente Hasta,Monto,Fecha Pago'];
+  DB.jugadores.slice(1).filter(function(f){var a=f[COL.ACTIVO];return a===true||String(a).toLowerCase()==='si';}).forEach(function(f){
+    var pl=getPlanJ(f),cv=estadoCuotaV2(f);
+    var pagos=CUOTAS_DB.cuotas.filter(function(c){return c[0]==(f[COL.DNI]||f[COL.TARJETA]);});
+    var ult=pagos.length?pagos[pagos.length-1]:null;
+    rows.push(['"'+(f[COL.APELLIDO]||'')+'"','"'+(f[COL.NOMBRE]||'')+'"',f[COL.DNI]||f[COL.TARJETA],'"'+(f[COL.CATEGORIA_APP]||'')+'"','"'+(pl||'')+'"',cv.estado,cv.hasta?formatDate(cv.hasta):'',ult?ult[6]:0,ult?ult[5]:''].join(','));
+  });
+  var blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='cuotas_excursionistas_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
+}
+
+// ── PLANES ADMIN ────────────────────────────────────────
+function renderListPlanes(){
+  var el=document.getElementById('listPlanes');
+  el.innerHTML=!CUOTAS_DB.planes.length?'<p style="color:var(--muted);font-size:12px;padding:10px;">Sin planes</p>':
+    CUOTAS_DB.planes.map(function(p,i){
+      return'<div class="item-row"><span><strong>'+p[0]+'</strong> - $'+Number(p[1]).toLocaleString('es-AR')+'</span>'
+        +'<div><button class="icon-btn" data-action="editplan" data-idx="'+i+'">editar</button>'
+        +'<button class="icon-btn" style="color:var(--red);" data-action="borrar" data-tabla="Planes" data-row="'+p[p.length-1]+'">X</button></div></div>';
+    }).join('');
+  el.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-action]');if(!btn)return;
+    if(btn.dataset.action==='borrar')borrar(btn.dataset.tabla,parseInt(btn.dataset.row));
+    if(btn.dataset.action==='editplan'){var p=CUOTAS_DB.planes[parseInt(btn.dataset.idx)];cargarEditPlan(p[p.length-1],p[0],p[1]);}
+  });
+  document.getElementById('m-plan').innerHTML='<option value="">-- Sin plan --</option>'+
+    CUOTAS_DB.planes.map(function(p){return'<option value="'+p[0]+'">'+p[0]+' ($'+Number(p[1]).toLocaleString('es-AR')+')</option>';}).join('');
+}
+function cargarEditPlan(idx,n,m){planEditIdx=idx;document.getElementById('planNom').value=n;document.getElementById('planMonto').value=m;document.getElementById('btnPlan').innerText='ACTUALIZAR';document.getElementById('btnPlan').style.background='var(--orange)';}
+function guardarPlan(){
+  var n=document.getElementById('planNom').value.trim(),m=document.getElementById('planMonto').value.trim();
+  if(!n||!m)return alert('Completa nombre y monto');
+  mostrarLoader('Guardando plan...');
+  var reset=function(){planEditIdx=null;document.getElementById('planNom').value='';document.getElementById('planMonto').value='';document.getElementById('btnPlan').innerText='+';document.getElementById('btnPlan').style.background='';};
+  var reload=function(){google.script.run.withSuccessHandler(function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();ocultarLoader();}).getCuotas(TOKEN);};
+  if(planEditIdx)google.script.run.withSuccessHandler(function(){reset();reload();}).updateAdminItem('Planes',planEditIdx,[n,m],TOKEN);
+  else google.script.run.withSuccessHandler(function(){reset();reload();}).addComplexItem('Planes',[n,m],TOKEN);
+}
+
+// ── CONFIG PERIODOS ──────────────────────────────────────
+function agregarPeriodo(){
+  var mes=parseInt(document.getElementById('cpMes').value);
+  var anioD=parseInt(document.getElementById('cpAnioD').value)||new Date().getFullYear();
+  var diaD=parseInt(document.getElementById('cpDiaD').value)||1;
+  var anioH=parseInt(document.getElementById('cpAnioH').value)||anioD;
+  var diaH=parseInt(document.getElementById('cpDiaH').value)||0;
+  var gracia=parseInt(document.getElementById('cpGracia').value)||5;
+  var desc=document.getElementById('cpDesc').value||nombreMes(mes)+' '+anioD;
+  PERIODOS_EDIT.push({mes:mes,anioD:anioD,diaD:diaD,anioH:anioH,diaH:diaH,gracia:gracia,desc:desc});
+  renderPeriodosAdmin();
+}
+function generarPeriodosAnio(){
+  var anio=parseInt(document.getElementById('cpAnioD').value)||new Date().getFullYear();
+  var gracia=parseInt(document.getElementById('cpGracia').value)||5;
+  PERIODOS_EDIT=[];
+  for(var i=1;i<=12;i++)PERIODOS_EDIT.push({mes:i,anioD:anio,diaD:1,anioH:anio,diaH:0,gracia:gracia,desc:nombreMes(i)+' '+anio});
+  renderPeriodosAdmin();
+}
+function eliminarPeriodoEdit(idx){PERIODOS_EDIT.splice(idx,1);renderPeriodosAdmin();}
+function renderPeriodosAdmin(){
+  var el=document.getElementById('listPeriodos');
+  if(!PERIODOS_EDIT.length){el.innerHTML='<p style="color:var(--muted);font-size:12px;">Sin periodos. Usá GENERAR ANO COMPLETO.</p>';return;}
+  var hoy=new Date();hoy.setHours(0,0,0,0);
+  el.innerHTML=PERIODOS_EDIT.map(function(p,idx){
+    var desde=getFechaDesde(p),hasta=getFechaHasta(p),vence=getFechaVenc(p);
+    var cls=hoy>vence?'vencido':hoy>=desde&&hoy<=vence?'activo':'proximo';
+    var lbl=cls==='activo'?'ACTIVO':cls==='vencido'?'VENCIDO':'PRÓXIMO';
+    var color=cls==='activo'?'var(--verde)':cls==='vencido'?'var(--red)':'var(--dorado)';
+    var bg=cls==='activo'?'var(--verde-dim)':cls==='vencido'?'var(--red-dim)':'var(--dorado-dim)';
+    return'<div class="periodo-card '+cls+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+      +'<strong style="font-size:14px;">'+p.desc+'</strong>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +'<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;background:'+bg+';color:'+color+';">'+lbl+'</span>'
+      +'<button class="icon-btn" style="color:var(--red);" onclick="eliminarPeriodoEdit('+idx+')">X</button>'
+      +'</div></div>'
+      +'<div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">'
+      +'<div><div style="color:var(--text);font-weight:600;">Desde</div>'+formatDate(desde)+'</div>'
+      +'<div><div style="color:var(--text);font-weight:600;">Hasta</div>'+formatDate(hasta)+'</div>'
+      +'<div><div style="color:var(--text);font-weight:600;">Vence (+'+p.gracia+'d)</div>'+formatDate(vence)+'</div>'
+      +'</div></div>';
+  }).join('');
+}
+function guardarPeriodos(){
+  if(!PERIODOS_EDIT.length)return alert('No hay periodos para guardar');
+  mostrarLoader('Guardando configuracion...');
+  var rows=PERIODOS_EDIT.map(function(p){return[p.mes,p.anioD,p.diaD,p.anioH||p.anioD,p.diaH||0,p.gracia||5,p.desc||''];});
+  google.script.run.withSuccessHandler(function(){alert('Configuracion guardada');inicializar();}).withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();}).guardarConfigPagos(rows,TOKEN);
+}
+
+// ── ASISTENCIAS ──────────────────────────────────────────
+function poblarTurnosAsist(){
+  var sel=document.getElementById('asistTurno');
+  sel.innerHTML='<option value="">-- Sin turno específico --</option>';
+  DB.horarios.forEach(function(h,i){sel.innerHTML+='<option value="'+i+'">'+h[0]+' '+h[1]+'hs - '+h[4]+' ('+h[2]+')</option>';});
+  var sc=document.getElementById('asistCat');sc.innerHTML='<option value="">Todas</option>';
+  DB.categorias.forEach(function(c){sc.innerHTML+='<option>'+c[0]+'</option>';});
+}
+
+function cargarListaAsist(){
+  var ti=document.getElementById('asistTurno').value;
+  var fecha=document.getElementById('asistFecha').value;
+  var cf=document.getElementById('asistCat').value;
+  if(!fecha){document.getElementById('asistContenido').innerHTML='<div class="empty-state"><p>Selecciona una fecha</p></div>';return;}
+  if(ti===''&&!cf){document.getElementById('asistContenido').innerHTML='<div class="empty-state"><p>Selecciona turno o categoria</p></div>';return;}
+  var catNom,turnoId,turnoLabel,hd=null;
+  if(ti!==''){hd=DB.horarios[ti];catNom=cf||hd[4];turnoId=fecha+'_T'+ti+'_'+hd[4];turnoLabel=hd[0]+' '+hd[1]+'hs - '+hd[4];}
+  else{catNom=cf;turnoId=fecha+'_libre_'+cf;turnoLabel='Clase libre - '+cf;}
+  var jug=DB.jugadores.slice(1).filter(function(f){
+    var a=f[COL.ACTIVO];
+    return(a===true||String(a).toLowerCase()==='si'||String(a).toLowerCase()==='true')&&(catNom?f[COL.CATEGORIA_APP]===catNom:true);
+  });
+  asistActual={};
+  asistencias.forEach(function(r){if(r[1]===turnoId){var v=r[5];asistActual[r[3]]=(v===true||String(v).toLowerCase()==='true');}});
+  if(!asistencias.some(function(r){return r[1]===turnoId;}))jug.forEach(function(f){asistActual[f[COL.DNI]||f[COL.TARJETA]]=true;});
+  var pres=Object.values(asistActual).filter(function(v){return v;}).length;
+  var aus=jug.length-pres,pct=jug.length>0?Math.round(pres/jug.length*100):0;
+  var ff=new Date(fecha+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+  var html='<div class="asist-lista">';
+  html+='<div class="asist-lista-header"><div><div class="asist-lista-title">'+turnoLabel+'</div>';
+  html+='<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+(hd?'Sede: '+hd[2]+' - Prof: '+hd[3]+' | ':'')+ff+'</div></div>';
+  html+='<div style="display:flex;gap:8px;"><button class="btn btn-secondary" style="font-size:11px;" id="btnTodosP">TODOS PRESENTES</button>';
+  html+='<button class="btn btn-save" id="btnGuardarAsist">GUARDAR</button></div></div>';
+  html+='<div class="asist-stats-bar">';
+  html+='<div class="asist-stat"><div class="asist-stat-n" id="cnt-p" style="color:#6de097">'+pres+'</div><div class="asist-stat-l">Presentes</div></div>';
+  html+='<div class="asist-stat"><div class="asist-stat-n" id="cnt-a" style="color:var(--red)">'+aus+'</div><div class="asist-stat-l">Ausentes</div></div>';
+  html+='<div class="asist-stat"><div class="asist-stat-n" id="cnt-pct" style="color:var(--dorado)">'+pct+'%</div><div class="asist-stat-l">Asistencia</div></div>';
+  html+='<div class="asist-stat"><div class="asist-stat-n" style="color:var(--muted)">'+jug.length+'</div><div class="asist-stat-l">Total</div></div></div>';
+  html+='<div class="asist-search-bar"><input type="text" id="asistBusq" placeholder="Filtrar por nombre..." oninput="filtrarListaAsist()"></div>';
+  if(!jug.length)html+='<div class="empty-state"><p>Sin socios activos en esta categoria</p></div>';
+  else{
+    html+='<div id="asistRows">';
+    jug.forEach(function(f){
+      var dni=(f[COL.DNI]||f[COL.TARJETA]||'').toString();
+      var pr=asistActual[dni]!==false;
+      var cv=estadoCuotaV2(f);
+      var dt=cv.estado==='debe'?'<span style="font-size:10px;font-weight:800;color:var(--red);margin-left:8px;">DEBE</span>':cv.estado==='vence'?'<span style="font-size:10px;font-weight:800;color:var(--dorado);margin-left:8px;">VENCE</span>':'';
+      var anioNac=extraerAnioNac(f[COL.FECHA_NAC]);
+      html+='<div class="asist-row" data-nombre="'+(f[COL.APELLIDO]||'').toLowerCase()+' '+(f[COL.NOMBRE]||'').toLowerCase()+'">';
+      html+='<div><div class="asist-nombre">'+f[COL.APELLIDO]+', '+f[COL.NOMBRE]+dt+'</div>';
+      html+='<div class="asist-info">DNI: '+dni+(anioNac?' | Nac. '+anioNac:'')+(f[COL.CATEGORIA_APP]?' | '+f[COL.CATEGORIA_APP]:'')+'</div></div>';
+      html+='<button class="toggle-asist '+(pr?'presente':'ausente')+'" id="tog-'+dni+'" data-dni="'+dni+'" data-total="'+jug.length+'"></button>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  document.getElementById('asistContenido').innerHTML=html;
+  document.getElementById('asistContenido').addEventListener('click',function(e){
+    var tog=e.target.closest('.toggle-asist');
+    if(tog)toggleAsist(tog.dataset.dni,parseInt(tog.dataset.total));
+  });
+  var bg=document.getElementById('btnGuardarAsist');if(bg)bg.addEventListener('click',function(){
+    // Feedback visual inmediato (optimistic UI)
+    bg.innerText='Guardando...';bg.style.background='var(--dorado)';bg.disabled=true;
+    guardarAsist(turnoId,turnoLabel,bg);
+  });
+  var bt=document.getElementById('btnTodosP');if(bt)bt.addEventListener('click',function(){marcarTodosPresentes(jug.length);});
+}
+
+function filtrarListaAsist(){
+  var b=document.getElementById('asistBusq').value.toLowerCase();
+  document.querySelectorAll('#asistRows .asist-row').forEach(function(r){r.style.display=r.dataset.nombre.includes(b)?'':'none';});
+}
+function marcarTodosPresentes(total){
+  Object.keys(asistActual).forEach(function(d){asistActual[d]=true;});
+  document.querySelectorAll('.toggle-asist').forEach(function(b){b.className='toggle-asist presente';});
+  document.getElementById('cnt-p').innerText=total;document.getElementById('cnt-a').innerText=0;document.getElementById('cnt-pct').innerText='100%';
+}
+function toggleAsist(dni,total){
+  asistActual[dni]=!asistActual[dni];
+  var tog=document.getElementById('tog-'+dni);
+  if(tog)tog.className='toggle-asist '+(asistActual[dni]?'presente':'ausente');
+  var p=Object.values(asistActual).filter(function(v){return v;}).length;
+  document.getElementById('cnt-p').innerText=p;
+  document.getElementById('cnt-a').innerText=total-p;
+  document.getElementById('cnt-pct').innerText=total>0?Math.round(p/total*100)+'%':'0%';
+}
+function guardarAsist(tid,tlbl,btnRef){
+  var fecha=document.getElementById('asistFecha').value;if(!fecha)return;
+  var regs=Object.entries(asistActual).map(function(e){
+    var jug=DB.jugadores.slice(1).find(function(f){return(f[COL.DNI]||f[COL.TARJETA])==e[0];});
+    return[fecha,tid,tlbl,e[0],jug?jug[COL.APELLIDO]+' '+jug[COL.NOMBRE]:e[0],(e[1]?'true':'false'),jug?jug[jug.length-2]:''];
+  });
+  if(!regs.length)return alert('Sin socios');
+  // Actualizar local inmediatamente (optimistic update) sin mostrar loader
+  asistencias=asistencias.filter(function(r){return r[1]!==tid;}).concat(regs);
+  // Guardar en background
+  google.script.run
+    .withSuccessHandler(function(){
+      var btn=btnRef||document.getElementById('btnGuardarAsist');
+      if(btn){btn.innerText='GUARDADO ✓';btn.style.background='var(--verde)';btn.disabled=false;setTimeout(function(){btn.innerText='GUARDAR';btn.style.background='';},2500);}
+    })
+    .withFailureHandler(function(e){
+      // Si falla, revertir el optimistic update
+      asistencias=asistencias.filter(function(r){return r[1]!==tid;});
+      var btn=btnRef||document.getElementById('btnGuardarAsist');
+      if(btn){btn.innerText='ERROR - REINTENTAR';btn.style.background='var(--red)';btn.disabled=false;}
+      alert('Error al guardar: '+e);
+    })
+    .guardarAsistencia(regs,TOKEN);
+}
+
+// ── STATS ASISTENCIA ─────────────────────────────────────
+function getStatsJ(dni){
+  var h=new Date(),mes=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0');
+  var reg=asistencias.filter(function(r){return r[3]==dni&&r[0].startsWith(mes);});
+  var pr=reg.filter(function(r){var v=r[5];return v===true||String(v).toLowerCase()==='true';}).length;
+  return{total:reg.length,presentes:pr,pct:reg.length>0?Math.round(pr/reg.length*100):0};
+}
+function getHistJ(dni){return asistencias.filter(function(r){return r[3]==dni;}).sort(function(a,b){return b[0].localeCompare(a[0]);}).slice(0,20);}
+
+// ── MODAL SOCIO ──────────────────────────────────────────
+function abrirM(ai){
+  var f=DB.jugadores[ai];
+  var dni=(f[COL.DNI]||f[COL.TARJETA]||'').toString();
+  var sheet=f[f.length-2],row=f[f.length-1];
+  itemSel={sheet:sheet,row:row,dni:dni,arrIdx:ai};
+  document.getElementById('m-nombre').innerText=(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'');
+  document.getElementById('m-dni-sub').innerText='DNI: '+dni+(f[COL.FECHA_NAC]?' | Nac: '+f[COL.FECHA_NAC]:'');
+  var anioNac=extraerAnioNac(f[COL.FECHA_NAC]);
+  document.getElementById('m-edad').innerText=anioNac?anioNac+' ('+calcularEdad(f[COL.FECHA_NAC])+' anios)':'-';
+  document.getElementById('m-genero').value=f[COL.SEXO]||'Masculino';
+  document.getElementById('m-cat-m').value=f[COL.CATEGORIA_APP]||'';
+  var activoRaw=f[COL.ACTIVO];
+  var activo=(activoRaw===true||String(activoRaw).toLowerCase()==='si'||String(activoRaw).toLowerCase()==='true');
+  document.getElementById('m-estado').value=activo?'true':'false';
+  document.getElementById('m-email').innerText=(f[COL.EMAIL]||'').toString().trim()||'Sin registro';
+  document.getElementById('m-celular').innerHTML=btnContacto(f[COL.CELULAR]||f[COL.TEL]);
+  document.getElementById('m-domicilio').innerText=(f[COL.DOMICILIO]||'').toString().trim()||'Sin registro';
+  document.getElementById('m-obs').innerText=f[COL.OBS]||'Ninguna';
+  document.getElementById('m-membresia').innerText=f[COL.MEMBRESIA]||'-';
+  document.getElementById('m-venc-planilla').innerText=f[COL.VENCIMIENTO]||'-';
+  mostrarLink('l-perfil',f[COL.FOTO],'Ver Foto');
+  mostrarLink('l-dni',f[COL.DNI_FOTO],'Ver DNI');
+  mostrarLink('l-apto',f[COL.APTO],'Ver Apto');
+  var st=getStatsJ(dni),pc=st.pct>=75?'#6de097':st.pct>=50?'var(--orange)':'var(--red)';
+  document.getElementById('m-asist-pct').style.color=pc;
+  document.getElementById('m-asist-pct').innerText=st.total>0?st.pct+'%':'-';
+  document.getElementById('m-asist-total').innerText=st.total>0?st.presentes+'/'+st.total:'-';
+  var hist=getHistJ(dni);
+  document.getElementById('m-hist-bar').innerHTML=!hist.length?'<span style="color:var(--muted);font-size:12px;">Sin registros</span>':
+    hist.map(function(r){var p=(r[5]===true||String(r[5]).toLowerCase()==='true');return'<div class="hist-dot '+(p?'p':'a')+'" title="'+r[0]+'">'+(p?'OK':'X')+'</div>';}).join('');
+  var cv=estadoCuotaV2(f);
+  var ec=document.getElementById('m-estado-cuota');
+  if(cv.estado==='ok')ec.innerHTML='<span style="color:#6de097;font-weight:700;">AL DÍA</span>'+(cv.hasta?' - Vigente hasta <strong>'+formatDate(cv.hasta)+'</strong>':'');
+  else if(cv.estado==='vence')ec.innerHTML='<span style="color:var(--dorado-lite);font-weight:700;">POR VENCER</span>'+(cv.hasta?' - Vence el <strong>'+formatDate(cv.hasta)+'</strong>':'');
+  else if(cv.estado==='debe')ec.innerHTML='<span style="color:var(--red);font-weight:700;">DEBE</span> - Sin pago vigente';
+  else ec.innerHTML='<span style="color:var(--muted);">Sin plan asignado</span>';
+  document.getElementById('m-plan').value=getPlanJ(f)||'';
+  var hc=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;}).sort(function(a,b){return(b[5]||'').localeCompare(a[5]||'');});
+  document.getElementById('m-hist-cuotas').innerHTML=!hc.length?'<p style="color:var(--muted);font-size:12px;">Sin pagos registrados</p>':
+    hc.map(function(c){
+      return'<div class="hist-cuota-row"><div>'
+        +'<div class="hist-periodo">'+(c[2]||'Sin plan')+'</div>'
+        +'<div class="hist-meta">'+(c[3]?'Desde '+c[3]:'')+(c[4]?' hasta '+c[4]:'')+'</div>'
+        +'<div class="hist-meta">'+(c[7]||'-')+' - '+(c[8]||'-')+' - '+(c[5]||'-')+'</div>'
+        +(c[9]?'<div class="hist-meta" style="color:var(--orange);">'+c[9]+'</div>':'')+'</div>'
+        +'<div class="hist-monto">$'+Number(c[6]).toLocaleString('es-AR')+'</div></div>';
+    }).join('');
+  document.getElementById('modalEdicion').classList.add('open');
+}
+function cerrarModal(){document.getElementById('modalEdicion').classList.remove('open');}
+
+function guardarPlanJugador(){
+  if(!itemSel)return;
+  var plan=document.getElementById('m-plan').value;
+  mostrarLoader('Guardando plan...');
+  google.script.run
+    .withSuccessHandler(function(){DB.jugadores[itemSel.arrIdx][COL.PLAN]=plan;ocultarLoader();cerrarModal();renderPlayers();})
+    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
+    .guardarPlanJugador({sheet:itemSel.sheet,row:itemSel.row,plan:plan},TOKEN);
+}
+
+// AUTO-CATEGORIZAR por anio de nacimiento
+function autoCat(){
+  var anioNac=extraerAnioNac(DB.jugadores[itemSel.arrIdx][COL.FECHA_NAC]);
+  var gen=document.getElementById('m-genero').value;
+  if(!anioNac)return alert('Sin fecha de nacimiento registrada');
+  var s=DB.categorias.find(function(c){
+    return anioNac>=parseInt(c[2])&&anioNac<=parseInt(c[3])&&(c[4]===gen||c[4]==='Mixto');
+  });
+  if(s)document.getElementById('m-cat-m').value=s[0];
+  else alert('Sin categoria para anio '+anioNac+' / genero '+gen);
+}
+
+function guardarJ(){
+  if(!itemSel)return;
+  var d={sheet:itemSel.sheet,row:itemSel.row,
+    genero:document.getElementById('m-genero').value,
+    activo:document.getElementById('m-estado').value==='true',
+    categoria:document.getElementById('m-cat-m').value};
+  mostrarLoader('Guardando ficha...');
+  google.script.run
+    .withSuccessHandler(function(){
+      // Actualizar local con los mismos tipos que usa el filtro
+      DB.jugadores[itemSel.arrIdx][COL.ACTIVO] = d.activo ? 'Si' : 'No';
+      DB.jugadores[itemSel.arrIdx][COL.CATEGORIA_APP] = d.categoria;
+      DB.jugadores[itemSel.arrIdx][COL.SEXO] = d.genero;
+      ocultarLoader();
+      cerrarModal();
+      renderPlayers();
+      toast('Ficha actualizada', 'ok');
+    })
+    .withFailureHandler(function(e){alert('Error al guardar: '+e);ocultarLoader();})
+    .updatePlayer(d,TOKEN);
+}
+
+function autoCategorizarTodo(){
+  if(!confirm('Asignará categoria a TODOS por anio de nacimiento. Continuar?'))return;
+  mostrarLoader('Procesando...');
+  var upd=[];
+  DB.jugadores.slice(1).forEach(function(f){
+    var anioNac=extraerAnioNac(f[COL.FECHA_NAC]);
+    var gen=f[COL.SEXO]||'Masculino';
+    var ca=f[COL.CATEGORIA_APP];
+    var s=DB.categorias.find(function(c){return anioNac&&anioNac>=parseInt(c[2])&&anioNac<=parseInt(c[3])&&(c[4]===gen||c[4]==='Mixto');});
+    if(s&&s[0]!==ca)upd.push({sheet:f[f.length-2],row:f[f.length-1],cat:s[0]});
+  });
+  if(!upd.length){alert('Todos ya estan en la categoria correcta.');ocultarLoader();return;}
+  document.getElementById('loader-msg').innerText='Actualizando '+upd.length+' registros...';
+  google.script.run
+    .withSuccessHandler(function(){
+      // Actualizar local sin recargar todo
+      upd.forEach(function(u){
+        var jug=DB.jugadores.find(function(f){return f[f.length-1]===u.row;});
+        if(jug) jug[COL.CATEGORIA_APP]=u.cat;
+      });
+      ocultarLoader();
+      renderPlayers();
+      poblarSelects();
+      toast('Actualizados: '+upd.length+' socios','ok');
+    })
+    .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
+    .bulkUpdateCategories(upd,TOKEN);
+}
+
+// ── ADMIN LISTAS ─────────────────────────────────────────
+function renderList(id,data,tabla){
+  var el=document.getElementById(id);
+  el.innerHTML=data.map(function(item){
+    return'<div class="item-row"><span>'+item[0]+'</span>'
+      +'<button class="icon-btn" style="color:var(--red);" data-action="borrar" data-tabla="'+tabla+'" data-row="'+item[item.length-1]+'">X</button></div>';
+  }).join('');
+  el.addEventListener('click',function(e){var btn=e.target.closest('[data-action="borrar"]');if(btn)borrar(btn.dataset.tabla,parseInt(btn.dataset.row));});
+}
+
+function crearSimple(t,id){var v=document.getElementById(id).value.trim();if(!v)return alert('Ingresa un valor');mostrarLoader('Guardando...');google.script.run.withSuccessHandler(function(){document.getElementById(id).value='';inicializar();}).addComplexItem(t,[v],TOKEN);}
+function borrar(t,r){if(!confirm('¿Eliminar?'))return;mostrarLoader('Eliminando...');google.script.run.withSuccessHandler(inicializar).deleteAdminItem(t,r,TOKEN);}
+
+function renderListCat(){
+  var el=document.getElementById('listCat');
+  el.innerHTML=DB.categorias.map(function(c,i){
+    return'<div class="item-row"><span style="border-left:6px solid '+c[1]+';padding-left:10px;"><strong>'+c[0]+'</strong> (nacidos '+c[2]+' al '+c[3]+') - '+c[4]+'</span>'
+      +'<div><button class="icon-btn" style="color:var(--muted);" data-action="editcat" data-idx="'+i+'">editar</button>'
+      +'<button class="icon-btn" style="color:var(--red);" data-action="borrar" data-tabla="Config_Categorias" data-row="'+c[c.length-1]+'">X</button></div></div>';
+  }).join('');
+  el.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-action]');if(!btn)return;
+    if(btn.dataset.action==='borrar')borrar(btn.dataset.tabla,parseInt(btn.dataset.row));
+    if(btn.dataset.action==='editcat'){var c=DB.categorias[parseInt(btn.dataset.idx)];cargarEditCat(c[c.length-1],c[0],c[1],c[2],c[3],c[4]);}
+  });
+}
+function cargarEditCat(idx,n,co,mi,ma,g){catEditIdx=idx;document.getElementById('cNom').value=n;document.getElementById('cCol').value=co;document.getElementById('cMin').value=mi;document.getElementById('cMax').value=ma;document.getElementById('cGen').value=g;document.getElementById('btnCat').innerText='ACTUALIZAR';document.getElementById('btnCat').style.background='var(--orange)';document.getElementById('cardCat').style.borderColor='var(--orange)';}
+function guardarCat(){
+  var d=[document.getElementById('cNom').value,document.getElementById('cCol').value,document.getElementById('cMin').value,document.getElementById('cMax').value,document.getElementById('cGen').value];
+  if(!d[0]||!d[2]||!d[3])return alert('Completa todos los campos');
+  mostrarLoader('Guardando...');
+  var resetCat=function(){catEditIdx=null;document.getElementById('btnCat').innerText='GUARDAR CATEGORIA';document.getElementById('btnCat').style.background='';document.getElementById('cardCat').style.borderColor='';limpiarFormCat();};
+  var reloadCats=function(){
+    google.script.run.withSuccessHandler(function(raw){
+      var dat=JSON.parse(raw);
+      if(!dat.error){DB.categorias=dat.categorias;}
+      resetCat();renderListCat();poblarSelects();ocultarLoader();
+      toast('Categoria guardada','ok');
+    }).getData(TOKEN);
+  };
+  if(catEditIdx)google.script.run.withSuccessHandler(reloadCats).updateAdminItem('Config_Categorias',catEditIdx,d,TOKEN);
+  else google.script.run.withSuccessHandler(reloadCats).addComplexItem('Config_Categorias',d,TOKEN);
+}
+function limpiarFormCat(){document.getElementById('cNom').value='';document.getElementById('cCol').value='#1a7a3c';document.getElementById('cMin').value='';document.getElementById('cMax').value='';document.getElementById('cGen').value='Masculino';}
+
+function renderHorarios(){
+  var elH=document.getElementById('listH');
+  elH.innerHTML=DB.horarios.map(function(h){
+    return'<div class="item-row" style="border-left:4px solid var(--dorado);flex-direction:column;align-items:flex-start;">'
+      +'<div style="display:flex;justify-content:space-between;width:100%;margin-bottom:8px;"><strong>'+h[0]+' '+h[1]+' hs</strong>'
+      +'<button class="icon-btn" style="color:var(--red);" data-action="borrar" data-tabla="Horarios" data-row="'+h[h.length-1]+'">X</button></div>'
+      +'<small style="color:var(--muted);">Sede: '+h[2]+'</small> <small style="color:var(--muted);">Prof: '+h[3]+'</small>'
+      +'<small style="color:var(--dorado);margin-top:4px;">Cat: '+h[4]+'</small></div>';
+  }).join('');
+  elH.addEventListener('click',function(e){var btn=e.target.closest('[data-action="borrar"]');if(btn)borrar(btn.dataset.tabla,parseInt(btn.dataset.row));});
+}
+function crearHorario(){
+  var pr=Array.from(document.getElementById('hProfe').selectedOptions).map(function(o){return o.value;}).join(', ');
+  var d=[document.getElementById('hDia').value,document.getElementById('hHora').value,document.getElementById('hSede').value,pr,document.getElementById('hCat').value];
+  if(!d[1]||!pr)return alert('Completa hora y profesores');
+  mostrarLoader('Creando turno...');google.script.run.withSuccessHandler(inicializar).addComplexItem('Horarios',d,TOKEN);
+}
+
+function poblarSelects(){
+  var cats='<option value="">Todas</option>'+DB.categorias.map(function(c){return'<option>'+c[0]+'</option>';}).join('');
+  document.getElementById('fCat').innerHTML=cats;
+  document.getElementById('cFiltrocat').innerHTML=cats;
+  document.getElementById('hSede').innerHTML=DB.sedes.map(function(s){return'<option>'+s[0]+'</option>';}).join('');
+  document.getElementById('hCat').innerHTML=DB.categorias.map(function(c){return'<option value="'+c[0]+'">'+c[0]+' ('+c[2]+'-'+c[3]+')</option>';}).join('');
+  document.getElementById('hProfe').innerHTML=DB.profesores.map(function(p){return'<option>'+p[0]+'</option>';}).join('');
+}
+
+// ── ARCHIVOS ──────────────────────────────────────────────
+function subirArchivo(tipo){
+  var inp=document.getElementById('f-'+tipo),f=inp.files[0];if(!f)return alert('Selecciona un archivo');
+  mostrarLoader('Subiendo...');
+  var r=new FileReader();
+  r.onload=function(e){
+    var fo={base64:e.target.result.split(',')[1],mimeType:f.type,fileName:f.name,typeDoc:tipo,sheet:itemSel.sheet,row:itemSel.row};
+    google.script.run
+      .withSuccessHandler(function(url){alert('Archivo subido ✓');mostrarLink('l-'+tipo,url,tipo==='perfil'?'Ver Foto':tipo==='dni'?'Ver DNI':'Ver Apto');inp.value='';ocultarLoader();})
+      .withFailureHandler(function(e){alert('Error: '+e);ocultarLoader();})
+      .uploadFile(fo,TOKEN);
+  };r.readAsDataURL(f);
+}
+function mostrarLink(id,url,txt){document.getElementById(id).innerHTML=url?'<a href="'+url+'" target="_blank" style="color:#6de097;font-size:11px;text-decoration:none;">'+txt+'</a>':'<span style="color:var(--muted);font-size:11px;">Sin archivo</span>';}
+
+// ── HELPERS ───────────────────────────────────────────────
+function toast(msg,tipo){
+  var t=document.createElement('div');
+  var bg=tipo==='ok'?'var(--verde)':tipo==='error'?'var(--red)':'var(--dorado)';
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:'+bg+';color:white;padding:12px 20px;border-radius:8px;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;text-transform:uppercase;z-index:9999;letter-spacing:.05em;box-shadow:0 4px 20px rgba(0,0,0,.4);';
+  t.innerText=msg;document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove();},300);},2500);
+}
+function btnContacto(txt){
+  if(!txt||txt==='-')return'<span style="color:var(--muted);font-size:13px;">No registrado</span>';
+  var n=txt.toString().replace(/\D/g,'');
+  var html='<span style="font-size:13px;display:block;">'+txt+'</span>';
+  if(n.length>=8){
+    var wa=n;
+    if(wa.startsWith('11')||wa.startsWith('15')||wa.length===10)wa='549'+wa;
+    else if(wa.startsWith('0'))wa='549'+wa.substring(1);
+    html+='<div style="display:flex;gap:8px;margin-top:6px;"><a href="tel:'+n+'" class="btn-tel">LLAMAR</a><a href="https://wa.me/'+wa+'" target="_blank" class="btn-wa">WHATSAPP</a></div>';
+  }
+  return html;
+}
+function calcularEdad(fn){
+  if(!fn||fn==='-')return'??';
+  var f,s=fn.toString();
+  if(s.includes('/')){var p=s.split('/');f=new Date(p[2],p[1]-1,p[0]);}else f=new Date(fn);
+  if(isNaN(f))return'??';
+  var h=new Date(),e=h.getFullYear()-f.getFullYear();
+  if(h.getMonth()-f.getMonth()<0||(h.getMonth()===f.getMonth()&&h.getDate()<f.getDate()))e--;
+  return e;
+}
+function cambiarTab(ev,id){
+  document.querySelectorAll('.tab-content').forEach(function(c){c.style.display='none';});
+  document.getElementById('tab-'+id).style.display='block';
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  ev.target.classList.add('active');
+  if(id==='cuotas')renderCuotas();
+}
+</script>
+
+<!-- ══ PWA INSTALL BANNER ════════════════════════════ -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
+  background:linear-gradient(135deg,#0f5228 0%,#0a0d0a 100%);
+  border-top:2px solid #1a7a3c;padding:14px 20px;
+  display:flex;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,.6);">
+  <img src="icons/icon-192.png" style="width:44px;height:44px;border-radius:8px;flex-shrink:0;">
+  <div style="flex:1;">
+    <div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:800;
+      color:white;text-transform:uppercase;letter-spacing:.05em;">Excursionistas FC</div>
+    <div style="font-size:11px;color:#7a927a;margin-top:2px;">Instalar app en tu celular</div>
+  </div>
+  <button id="pwa-install-btn" style="background:#1a7a3c;color:white;border:none;
+    border-radius:8px;padding:10px 18px;font-family:Barlow Condensed,sans-serif;
+    font-size:13px;font-weight:800;text-transform:uppercase;cursor:pointer;
+    letter-spacing:.05em;white-space:nowrap;">
+    INSTALAR
+  </button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none';
+    localStorage.setItem('pwa-dismissed','1');"
+    style="background:none;border:none;color:#7a927a;font-size:22px;
+    cursor:pointer;padding:4px;line-height:1;flex-shrink:0;">&#x2715;</button>
+</div>
+
+<script>
+// ── SERVICE WORKER ──────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      console.log('SW registrado:', reg.scope);
+    }).catch(function(err) {
+      console.log('SW error:', err);
+    });
+  });
+}
+
+// ── PWA INSTALL PROMPT ──────────────────────────────────
+var deferredPrompt = null;
+var banner = document.getElementById('pwa-banner');
+var installBtn = document.getElementById('pwa-install-btn');
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Mostrar banner solo si no fue descartado antes
+  if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+    banner.style.display = 'flex';
+  }
+});
+
+if (installBtn) {
+  installBtn.addEventListener('click', function() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(choice) {
+      if (choice.outcome === 'accepted') {
+        banner.style.display = 'none';
+        localStorage.setItem('pwa-dismissed', '1');
+      }
+      deferredPrompt = null;
+    });
+  });
+}
+
+// iOS: no tiene beforeinstallprompt — mostrar instrucciones manuales
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var isStandalone = window.navigator.standalone;
+if (isIOS && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
+  var iosBanner = document.createElement('div');
+  iosBanner.style.cssText = 'display:flex;position:fixed;bottom:0;left:0;right:0;z-index:9999;'
+    + 'background:linear-gradient(135deg,#0f5228 0%,#0a0d0a 100%);'
+    + 'border-top:2px solid #1a7a3c;padding:14px 20px;align-items:center;gap:12px;'
+    + 'box-shadow:0 -4px 20px rgba(0,0,0,.6);';
+  iosBanner.innerHTML = '<img src="icons/icon-192.png" style="width:40px;height:40px;border-radius:8px;flex-shrink:0;">'
+    + '<div style="flex:1;">'
+    + '<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;color:white;text-transform:uppercase;">Instalar en iPhone</div>'
+    + '<div style="font-size:11px;color:#7a927a;margin-top:3px;">Toca <strong style="color:#c9a227;">Compartir</strong> → <strong style="color:#c9a227;">Agregar a inicio</strong></div>'
+    + '</div>'
+    + '<button onclick="this.parentElement.remove();localStorage.setItem('pwa-dismissed','1');" '
+    + 'style="background:none;border:none;color:#7a927a;font-size:22px;cursor:pointer;padding:4px;line-height:1;">&#x2715;</button>';
+  document.body.appendChild(iosBanner);
+}
+</script>
+</body>
+</html>
