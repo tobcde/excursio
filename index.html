@@ -6,6 +6,7 @@
 <title>Excursionistas - Gestion</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a7a3c">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Excursionistas">
@@ -519,6 +520,12 @@ function ocultarLoader(){document.getElementById('loader').style.display='none';
 
 function inicializar(){
   if(!TOKEN)return;
+  // Detectar si estamos en Apps Script o GitHub Pages
+  if(typeof google === 'undefined' || !google.script) {
+    alert('Esta app funciona desde el link de Apps Script, no desde GitHub Pages directamente.\n\nUsa la URL: https://script.google.com/...');
+    ocultarLoader();
+    return;
+  }
   mostrarLoader('Cargando socios...');
   // Paso 1: cargar socios primero y mostrar la app de inmediato
   google.script.run
@@ -1319,7 +1326,7 @@ if (isIOS && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
     + '<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;color:white;text-transform:uppercase;">Instalar en iPhone</div>'
     + '<div style="font-size:11px;color:#7a927a;margin-top:3px;">Toca <strong style="color:#c9a227;">Compartir</strong> → <strong style="color:#c9a227;">Agregar a inicio</strong></div>'
     + '</div>'
-    + '<button onclick="this.parentElement.remove();localStorage.setItem('pwa-dismissed','1');" '
+    + '<button onclick="this.parentElement.remove();localStorage.setItem(&quot;pwa-dismissed&quot;,&quot;1&quot;);" '
     + 'style="background:none;border:none;color:#7a927a;font-size:22px;cursor:pointer;padding:4px;line-height:1;">&#x2715;</button>';
   document.body.appendChild(iosBanner);
 }
