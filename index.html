@@ -64,6 +64,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .cuota-pill{font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;font-family:'Barlow Condensed';text-transform:uppercase;}
 .cuota-ok{background:var(--verde-dim);color:#6de097;border:1px solid var(--verde-border);}
 .cuota-debe{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border);}
+.cuota-parcial{background:rgba(201,162,39,.1);color:var(--dorado);border:1px solid rgba(201,162,39,.35);}
 .cuota-none{background:var(--surface);color:var(--muted);border:1px solid var(--border);}
 .cuota-vence{background:var(--dorado-dim);color:var(--dorado-lite);border:1px solid var(--dorado-border);}
 
@@ -231,7 +232,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
       <input type="text" id="busq" class="filter-select" placeholder="Nombre o DNI..." oninput="renderPlayers()"></div>
     <div class="filter-group"><label class="filter-label">Estado</label>
       <select id="fEstado" class="filter-select" onchange="renderPlayers()">
-        <option value="">Todos</option><option value="Activos">Solo Activos</option><option value="Inactivos">Solo Inactivos</option></select></div>
+        <option value="">Todos</option><option value="Activos" selected>Solo Activos</option><option value="Inactivos">Solo Inactivos</option></select></div>
     <div class="filter-group"><label class="filter-label">Genero</label>
       <select id="fGen" class="filter-select" onchange="renderPlayers()">
         <option value="">Todos</option><option>Masculino</option><option>Femenino</option></select></div>
@@ -593,14 +594,29 @@ function getFechaHasta(p){var anioH=p.anioH||p.anioD,diaH=parseInt(p.diaH)||0;if
 function getFechaVenc(p){var v=new Date(getFechaHasta(p));v.setDate(v.getDate()+(parseInt(p.gracia)||0));return v;}
 
 function estadoCuotaV2(f){
-  if(!getPlanJ(f))return{estado:'none',hasta:null};
+  var planNom=getPlanJ(f);
+  if(!planNom)return{estado:'none',hasta:null,deuda:0,parcial:false};
+  var planObj=getPlanObj(planNom);
+  var planMonto=planObj?Number(planObj[1])||0:0;
   var hoy=new Date();hoy.setHours(0,0,0,0);
   var dni=(f[COL.DNI]||'').toString();
   var pagos=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;});
   var mejor=null;
   pagos.forEach(function(c){var hasta=parseDate(c[4]);if(hasta&&hasta>=hoy){if(!mejor||hasta>parseDate(mejor[4]))mejor=c;}});
-  if(mejor){var hasta=parseDate(mejor[4]);var dias7=new Date(hoy);dias7.setDate(dias7.getDate()+7);return{estado:hasta<=dias7?'vence':'ok',hasta:hasta};}
-  return{estado:'debe',hasta:null};
+  if(mejor){
+    var hasta=parseDate(mejor[4]);
+    var dias7=new Date(hoy);dias7.setDate(dias7.getDate()+7);
+    // Verificar si el pago cubre el monto del plan
+    var montoPagado=Number(mejor[6])||0;
+    var deuda=planMonto>0&&montoPagado<planMonto?planMonto-montoPagado:0;
+    if(deuda>0){
+      // Pago parcial: amarillo
+      return{estado:'parcial',hasta:hasta,deuda:deuda,montoPagado:montoPagado};
+    }
+    return{estado:hasta<=dias7?'vence':'ok',hasta:hasta,deuda:0,parcial:false};
+  }
+  // Sin pago vigente: debe el monto completo del plan
+  return{estado:'debe',hasta:null,deuda:planMonto,parcial:false};
 }
 
 // ── PLANES ──────────────────────────────────────────────
@@ -638,8 +654,8 @@ function renderPlayers(){
     if(act&&est==='debe')deu++;if(act&&est==='vence')pv++;
     var st=getStatsJ(dni),pc=st.pct>=75?'var(--verde)':st.pct>=50?'var(--orange)':'var(--red)';
     var pl=getPlanJ(f),po=getPlanObj(pl),ms=po?'$'+Number(po[1]).toLocaleString('es-AR'):'';
-    var cl=est==='ok'?'cuota-ok':est==='debe'?'cuota-debe':est==='vence'?'cuota-vence':'cuota-none';
-    var lb=est==='ok'?'Al dia':est==='debe'?'DEBE':est==='vence'?'POR VENCER':'Sin plan';
+    var cl=est==='ok'?'cuota-ok':est==='debe'?'cuota-debe':est==='vence'?'cuota-vence':est==='parcial'?'cuota-parcial':'cuota-none';
+    var lb=est==='ok'?'Al dia':est==='debe'?'DEBE $'+Number(cv.deuda).toLocaleString('es-AR'):est==='vence'?'POR VENCER':est==='parcial'?'PARCIAL - Falta $'+Number(cv.deuda).toLocaleString('es-AR'):'Sin plan';
     if((est==='ok'||est==='vence')&&cv.hasta)lb+=' '+formatDate(cv.hasta);
     var bc=cc!=='transparent'?cc:'var(--verde)';
     // Rango anios de la categoria
@@ -1039,7 +1055,8 @@ function abrirM(ai){
   var ec=document.getElementById('m-estado-cuota');
   if(cv.estado==='ok')ec.innerHTML='<span style="color:#6de097;font-weight:700;">AL DÍA</span>'+(cv.hasta?' - Vigente hasta <strong>'+formatDate(cv.hasta)+'</strong>':'');
   else if(cv.estado==='vence')ec.innerHTML='<span style="color:var(--dorado-lite);font-weight:700;">POR VENCER</span>'+(cv.hasta?' - Vence el <strong>'+formatDate(cv.hasta)+'</strong>':'');
-  else if(cv.estado==='debe')ec.innerHTML='<span style="color:var(--red);font-weight:700;">DEBE</span> - Sin pago vigente';
+  else if(cv.estado==='parcial')ec.innerHTML='<span style="color:var(--dorado);font-weight:700;">PAGO PARCIAL</span> - Pago $'+Number(cv.montoPagado).toLocaleString('es-AR')+' de $'+(Number(cv.montoPagado)+Number(cv.deuda)).toLocaleString('es-AR')+' - <strong>Falta $'+Number(cv.deuda).toLocaleString('es-AR')+'</strong>';
+  else if(cv.estado==='debe')ec.innerHTML='<span style="color:var(--red);font-weight:700;">DEBE</span> - Sin pago vigente - <strong>$'+Number(cv.deuda).toLocaleString('es-AR')+'</strong>';
   else ec.innerHTML='<span style="color:var(--muted);">Sin plan asignado</span>';
   document.getElementById('m-plan').value=getPlanJ(f)||'';
   var hc=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;}).sort(function(a,b){return(b[5]||'').localeCompare(a[5]||'');});
@@ -1103,7 +1120,7 @@ function autoCategorizarTodo(){
   });
   if(!upd.length){alert('Todos ya estan en la categoria correcta.');ocultarLoader();return;}
   document.getElementById('loader-msg').innerText='Actualizando '+upd.length+' registros...';
-  callScript({action:'bulkUpdateCategories',updates:upd,pass:TOKEN},function(){
+  callScript({action:'bulkUpdateCategories',updates:upd,pass:TOKEN,_noRetry:true},function(){
     upd.forEach(function(u){var jug=DB.jugadores.find(function(f){return f[f.length-1]===u.row;});if(jug)jug[COL.CATEGORIA_APP]=u.cat;});
     ocultarLoader();renderPlayers();poblarSelects();toast('Actualizados: '+upd.length+' socios','ok');
   },function(e){alert('Error: '+e);ocultarLoader();});
@@ -1250,6 +1267,6 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.7</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.8</div>
 </body>
 </html>
