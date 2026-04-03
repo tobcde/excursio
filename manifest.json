@@ -1,0 +1,27 @@
+{
+  "name": "Excursionistas FC - Gestion",
+  "short_name": "Excursionistas",
+  "description": "Sistema de gestion de socios y asistencias - CA Excursionistas Futsal",
+  "start_url": "/excursio/",
+  "scope": "/excursio/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0d0a",
+  "theme_color": "#1a7a3c",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "sports"],
+  "lang": "es-AR"
+}
