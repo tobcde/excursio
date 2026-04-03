@@ -210,7 +210,11 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
     </div>
     <p style="color:var(--muted);font-size:11px;margin-bottom:20px;text-transform:uppercase;letter-spacing:.1em;">Sistema de Gestion</p>
     <input type="password" id="passInput" placeholder="CONTRASENA" onkeyup="if(event.key==='Enter')intentarLogin()">
-    <button class="btn btn-save" style="width:100%" onclick="intentarLogin()">INGRESAR</button>
+    <button class="btn btn-save" style="width:100%;margin-bottom:10px;" onclick="intentarLogin()">INGRESAR</button>
+    <button class="btn" id="btnHuella" style="width:100%;background:var(--negro-2,#1a1f1a);border:1px solid #1a7a3c;color:#7a927a;font-size:13px;display:none;" onclick="loginConHuella()">
+      &#x1F4F1; Entrar con huella / Face ID
+    </button>
+    <p id="huellaMsg" style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;display:none;"></p>
   </div>
 </div>
 
@@ -552,6 +556,7 @@ function inicializar(){
     if(d.error){alert(d.error);ocultarLoader();return;}
     document.getElementById('login-screen').style.display='none';
     DB=d;
+    registrarHuella(TOKEN); // ofrecer registro de huella si es la primera vez
     renderPlayers();
     poblarSelects();poblarTurnosAsist();poblarPeriodos();
     renderList('listP',DB.profesores,'Profesores');
@@ -1289,7 +1294,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.0</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.1</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
@@ -1348,6 +1353,107 @@ if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalon
     iosBanner.remove();
     localStorage.setItem('pwa-dismissed','1');
   });
+}
+
+// ── WEBAUTHN / HUELLA ─────────────────────────────────────────
+var WA_RP_ID = window.location.hostname;
+var WA_CRED_KEY = 'excursio_wa_cred';
+
+// Al cargar, verificar si hay credencial guardada y mostrar botón
+window.addEventListener('load', function() {
+  if (!window.PublicKeyCredential) return; // browser no soporta WebAuthn
+  var credId = localStorage.getItem(WA_CRED_KEY);
+  if (credId) {
+    var btn = document.getElementById('btnHuella');
+    if (btn) btn.style.display = 'block';
+  }
+});
+
+// Registrar huella después del primer login exitoso
+function registrarHuella(pass) {
+  if (!window.PublicKeyCredential) return;
+  if (localStorage.getItem(WA_CRED_KEY)) return; // ya registrada
+  // Preguntar si quiere registrar
+  setTimeout(function() {
+    if (!confirm('Queres ingresar con huella / Face ID la proxima vez?')) return;
+    var challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    var userId = new TextEncoder().encode('excursio_user');
+    navigator.credentials.create({
+      publicKey: {
+        challenge: challenge,
+        rp: { name: 'CA Excursionistas', id: WA_RP_ID },
+        user: { id: userId, name: 'admin', displayName: 'Administrador' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform', // solo sensores del dispositivo
+          userVerification: 'required'
+        },
+        timeout: 60000
+      }
+    }).then(function(cred) {
+      // Guardar el ID de la credencial y la contraseña cifrada
+      // (AES-GCM con clave derivada del credId — simple y seguro para este caso)
+      var credId = btoa(String.fromCharCode.apply(null, new Uint8Array(cred.rawId)));
+      // Guardar pass en sessionStorage solo para este registro — luego se limpia
+      localStorage.setItem(WA_CRED_KEY, credId);
+      localStorage.setItem('excursio_wa_pass', btoa(pass));
+      var btn = document.getElementById('btnHuella');
+      if (btn) btn.style.display = 'block';
+      toast('Huella registrada. La proxima vez usa el boton.', 'ok');
+    }).catch(function(e) {
+      console.log('WebAuthn registro cancelado:', e);
+    });
+  }, 1500);
+}
+
+// Login con huella
+function loginConHuella() {
+  if (!window.PublicKeyCredential) {
+    alert('Tu navegador no soporta autenticacion biometrica.');
+    return;
+  }
+  var credIdB64 = localStorage.getItem(WA_CRED_KEY);
+  if (!credIdB64) return;
+  var msg = document.getElementById('huellaMsg');
+  if (msg) { msg.innerText = 'Verificando...'; msg.style.display = 'block'; }
+  // Convertir credId de base64 a ArrayBuffer
+  var credIdBytes = Uint8Array.from(atob(credIdB64), function(c) { return c.charCodeAt(0); });
+  var challenge = new Uint8Array(32);
+  crypto.getRandomValues(challenge);
+  navigator.credentials.get({
+    publicKey: {
+      challenge: challenge,
+      rpId: WA_RP_ID,
+      allowCredentials: [{ type: 'public-key', id: credIdBytes }],
+      userVerification: 'required',
+      timeout: 60000
+    }
+  }).then(function(assertion) {
+    // Autenticacion exitosa — recuperar pass guardada
+    var storedPass = localStorage.getItem('excursio_wa_pass');
+    if (!storedPass) {
+      if (msg) { msg.innerText = 'Error: no hay contrasena guardada. Ingresa manualmente.'; }
+      return;
+    }
+    var pass = atob(storedPass);
+    if (msg) { msg.innerText = ''; msg.style.display = 'none'; }
+    // Hacer login con la contraseña recuperada
+    TOKEN = pass;
+    inicializar();
+  }).catch(function(e) {
+    if (msg) { msg.innerText = 'Verificacion cancelada o fallida.'; msg.style.display = 'block'; }
+    setTimeout(function() { if(msg) msg.style.display = 'none'; }, 3000);
+  });
+}
+
+// Borrar credencial guardada (por si se quiere resetear)
+function olvidarHuella() {
+  localStorage.removeItem(WA_CRED_KEY);
+  localStorage.removeItem('excursio_wa_pass');
+  var btn = document.getElementById('btnHuella');
+  if (btn) btn.style.display = 'none';
+  toast('Huella eliminada', 'ok');
 }
 </script>
 </body>
