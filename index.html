@@ -1108,7 +1108,7 @@ function guardarJ(){
 }
 
 function autoCategorizarTodo(){
-  if(!confirm('Asignará categoria a TODOS por anio de nacimiento. Continuar?'))return;
+  if(!confirm('Asignara categoria a TODOS por anio de nacimiento. Continuar?'))return;
   mostrarLoader('Procesando...');
   var upd=[];
   DB.jugadores.slice(1).forEach(function(f){
@@ -1119,11 +1119,26 @@ function autoCategorizarTodo(){
     if(s&&s[0]!==ca)upd.push({sheet:f[f.length-2],row:f[f.length-1],cat:s[0]});
   });
   if(!upd.length){alert('Todos ya estan en la categoria correcta.');ocultarLoader();return;}
-  document.getElementById('loader-msg').innerText='Actualizando '+upd.length+' registros...';
-  callScript({action:'bulkUpdateCategories',updates:upd,pass:TOKEN,_noRetry:true},function(){
-    upd.forEach(function(u){var jug=DB.jugadores.find(function(f){return f[f.length-1]===u.row;});if(jug)jug[COL.CATEGORIA_APP]=u.cat;});
-    ocultarLoader();renderPlayers();poblarSelects();toast('Actualizados: '+upd.length+' socios','ok');
-  },function(e){alert('Error: '+e);ocultarLoader();});
+  // Enviar en chunks de 25 para no superar el limite de URL del GAS
+  var CHUNK=25;
+  var chunks=[];
+  for(var i=0;i<upd.length;i+=CHUNK)chunks.push(upd.slice(i,i+CHUNK));
+  var done=0,total=upd.length,errores=0;
+  document.getElementById('loader-msg').innerText='Actualizando '+total+' registros...';
+  function enviarChunk(idx){
+    if(idx>=chunks.length){
+      // Todos los chunks enviados
+      upd.forEach(function(u){var jug=DB.jugadores.find(function(f){return f[f.length-1]===u.row;});if(jug)jug[COL.CATEGORIA_APP]=u.cat;});
+      ocultarLoader();renderPlayers();poblarSelects();
+      toast('Actualizados: '+done+' de '+total+(errores?' ('+errores+' errores)':''),'ok');
+      return;
+    }
+    callScript({action:'bulkUpdateCategories',updates:chunks[idx],pass:TOKEN,_noRetry:true},
+      function(){done+=chunks[idx].length;document.getElementById('loader-msg').innerText='Actualizando... '+done+'/'+total;enviarChunk(idx+1);},
+      function(e){errores++;enviarChunk(idx+1);}
+    );
+  }
+  enviarChunk(0);
 }
 
 // ── ADMIN LISTAS ─────────────────────────────────────────
@@ -1267,6 +1282,6 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.8</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.9</div>
 </body>
 </html>
