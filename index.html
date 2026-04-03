@@ -487,49 +487,47 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 // ESTADO GLOBAL
 // ═══════════════════════════════════════════════════════════
 // ── URL DEL APPS SCRIPT (API) ─────────────────────────────
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxysN4wzyalgV3NUfdxxZEFPUiqWsoIw0UCMCY0GhFesUOZFEUAkE6KjlJcL4bvJab3Nw/exec';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxit9v0XTBTP_6IZqnKx-wHm1IBSf0ehjXkCm8dXzHl-LaNykbGkSMRHx3Hv34ANH6SFQ/exec';
 
 // ── JSONP helper — reemplaza google.script.run ─────────────
 function callScript(payload, onSuccess, onError, _retryCount) {
   var retries = _retryCount || 0;
-  // Usar fetch con mode:'no-cors' no funciona porque no podemos leer la respuesta
-  // Usar fetch normal — el GAS debe tener CORS headers en el doGet
-  var url = SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
+  var cb = 'gs_' + Date.now() + '_' + Math.floor(Math.random()*99999);
+  var url = SCRIPT_URL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+  var done = false;
+  var script = document.createElement('script');
 
-  fetch(url, { method: 'GET', redirect: 'follow' })
-    .then(function(res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.text();
-    })
-    .then(function(txt) {
-      // El GAS puede devolver JSON puro o JSONP — manejar ambos
-      var data;
-      try {
-        // Intentar JSON puro primero
-        data = JSON.parse(txt);
-      } catch(e) {
-        // Si es JSONP: callback({...}) — extraer el JSON
-        var s = txt.indexOf('(');
-        var e2 = txt.lastIndexOf(')');
-        if (s >= 0 && e2 > s) {
-          data = JSON.parse(txt.substring(s + 1, e2));
-        } else {
-          throw new Error('Respuesta invalida del servidor');
-        }
-      }
-      if (data && data.error) {
-        if (onError) onError(data.error);
-      } else {
-        if (onSuccess) onSuccess(data);
-      }
-    })
-    .catch(function(err) {
-      if (retries < 2) {
-        setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 3000);
-      } else {
-        if (onError) onError('Error de conexion: ' + err.message + '. Verifica tu internet.');
-      }
-    });
+  var timer = setTimeout(function() {
+    if (done) return;
+    done = true;
+    delete window[cb];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (retries < 1 && !payload._noRetry) {
+      // 1 solo reintento automatico (salvo que se pida no reintentar)
+      setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 2000);
+    } else {
+      if (onError) onError('Sin respuesta del servidor. Verifica tu conexion.');
+    }
+  }, 15000);  // 15s timeout
+
+  window[cb] = function(data) {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    delete window[cb];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (data && data.error) {
+      if (onError) onError(data.error);
+    } else {
+      if (onSuccess) onSuccess(data);
+    }
+  };
+
+  script.src = url;
+  // NO cancelar en onerror: en mobile Chrome el onerror se dispara
+  // por el redirect de Google pero el callback llega igual.
+  script.onerror = function() { /* ignorar, el timer maneja el timeout */ };
+  document.head.appendChild(script);
 }
 
 var DB={jugadores:[],profesores:[],sedes:[],categorias:[],horarios:[],configPagos:[]};
@@ -1146,10 +1144,10 @@ function guardarCat(){
   mostrarLoader('Guardando...');
   var resetCat=function(){catEditIdx=null;document.getElementById('btnCat').innerText='GUARDAR CATEGORIA';document.getElementById('btnCat').style.background='';document.getElementById('cardCat').style.borderColor='';limpiarFormCat();};
   var reloadCats=function(){
-    callScript({action:'getData',pass:TOKEN},function(dat){
-      if(!dat.error){DB.categorias=dat.categorias;}
+    callScript({action:'getData',pass:TOKEN,_noRetry:true},function(dat){
+      if(dat&&!dat.error){DB.categorias=dat.categorias;}
       resetCat();renderListCat();poblarSelects();ocultarLoader();toast('Categoria guardada','ok');
-    });
+    },function(){resetCat();ocultarLoader();toast('Guardado. Recarga para ver.','ok');});
   };
   if(catEditIdx)callScript({action:'updateAdminItem',tabName:'Config_Categorias',rowIndex:catEditIdx,rowArray:d,pass:TOKEN},reloadCats);
   else callScript({action:'addComplexItem',tabName:'Config_Categorias',rowArray:d,pass:TOKEN},reloadCats);
@@ -1238,6 +1236,6 @@ function cambiarTab(ev,id){
 <div style="position:fixed;bottom:12px;right:12px;z-index:9999;
   background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;
   padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;
-  font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.1</div>
+  font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.2</div>
 </body>
 </html>
