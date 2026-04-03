@@ -802,13 +802,31 @@ function renderListPlanes(){
 }
 function cargarEditPlan(idx,n,m){planEditIdx=idx;document.getElementById('planNom').value=n;document.getElementById('planMonto').value=m;document.getElementById('btnPlan').innerText='ACTUALIZAR';document.getElementById('btnPlan').style.background='var(--orange)';}
 function guardarPlan(){
+  var btn=document.getElementById('btnPlan');
+  if(btn && btn.disabled) return;
   var n=document.getElementById('planNom').value.trim(),m=document.getElementById('planMonto').value.trim();
   if(!n||!m)return alert('Completa nombre y monto');
+  if(btn){btn.disabled=true;btn.style.opacity='0.6';}
   mostrarLoader('Guardando plan...');
-  var reset=function(){planEditIdx=null;document.getElementById('planNom').value='';document.getElementById('planMonto').value='';document.getElementById('btnPlan').innerText='+';document.getElementById('btnPlan').style.background='';};
-  var reload=function(){callScript({action:'getCuotas',pass:TOKEN},function(r){CUOTAS_DB=JSON.parse(r);renderListPlanes();ocultarLoader();});};
-  if(planEditIdx)callScript({action:'updateAdminItem',tabName:'Planes',rowIndex:planEditIdx,rowArray:[n,m],pass:TOKEN},function(){reset();reload();});
-  else callScript({action:'addComplexItem',tabName:'Planes',rowArray:[n,m],pass:TOKEN},function(){reset();reload();});
+  var reset=function(){
+    planEditIdx=null;
+    document.getElementById('planNom').value='';
+    document.getElementById('planMonto').value='';
+    if(btn){btn.disabled=false;btn.style.opacity='';btn.innerText='+';btn.style.background='';}
+  };
+  var onOk=function(){
+    // Actualizar local sin recargar todo
+    if(planEditIdx){
+      var idx=CUOTAS_DB.planes.findIndex(function(p){return p[p.length-1]===planEditIdx;});
+      if(idx>=0){var row=CUOTAS_DB.planes[idx];CUOTAS_DB.planes[idx]=[n,m,row[row.length-1]];}
+    } else {
+      CUOTAS_DB.planes.push([n,m,Date.now()]);
+    }
+    reset();renderListPlanes();ocultarLoader();toast('Plan guardado','ok');
+  };
+  var onErr=function(e){reset();ocultarLoader();alert('Error: '+e);};
+  if(planEditIdx)callScript({action:'updateAdminItem',tabName:'Planes',rowIndex:planEditIdx,rowArray:[n,m],pass:TOKEN,_noRetry:true},onOk,onErr);
+  else callScript({action:'addComplexItem',tabName:'Planes',rowArray:[n,m],pass:TOKEN,_noRetry:true},onOk,onErr);
 }
 
 // ── CONFIG PERIODOS ──────────────────────────────────────
@@ -1120,10 +1138,9 @@ function renderListCat(){
 function cargarEditCat(idx,n,co,mi,ma,g){catEditIdx=idx;document.getElementById('cNom').value=n;document.getElementById('cCol').value=co;document.getElementById('cMin').value=mi;document.getElementById('cMax').value=ma;document.getElementById('cGen').value=g;document.getElementById('btnCat').innerText='ACTUALIZAR';document.getElementById('btnCat').style.background='var(--orange)';document.getElementById('cardCat').style.borderColor='var(--orange)';}
 function guardarCat(){
   var btn=document.getElementById('btnCat');
-  if(btn && btn.disabled) return; // evitar doble click
+  if(btn && btn.disabled) return;
   var d=[document.getElementById('cNom').value,document.getElementById('cCol').value,document.getElementById('cMin').value,document.getElementById('cMax').value,document.getElementById('cGen').value];
   if(!d[0]||!d[2]||!d[3])return alert('Completa todos los campos');
-  // Deshabilitar boton inmediatamente para evitar doble envio
   if(btn){btn.disabled=true;btn.style.opacity='0.6';}
   mostrarLoader('Guardando...');
   var resetCat=function(){
@@ -1132,15 +1149,22 @@ function guardarCat(){
     document.getElementById('cardCat').style.borderColor='';
     limpiarFormCat();
   };
-  var reloadCats=function(){
-    // Actualizar local directamente sin llamar getData completo
-    callScript({action:'getData',pass:TOKEN,_noRetry:true},function(dat){
-      if(dat&&!dat.error){DB.categorias=dat.categorias;}
-      resetCat();renderListCat();poblarSelects();ocultarLoader();toast('Categoria guardada','ok');
-    },function(){resetCat();ocultarLoader();toast('Guardado. Recarga para ver.','ok');});
+  var onOk=function(resp){
+    // Actualizar DB local sin llamar getData — evita el loader largo y duplicados
+    if(catEditIdx){
+      // Edicion: actualizar la fila existente
+      DB.categorias[catEditIdx-2]=d; // catEditIdx es 1-based rowIndex
+    } else {
+      // Nueva: agregar al array local con rowIndex estimado
+      var newRow=d.concat([DB.categorias.length+2]);
+      DB.categorias.push(newRow);
+    }
+    resetCat();renderListCat();poblarSelects();ocultarLoader();
+    toast('Categoria guardada','ok');
   };
-  if(catEditIdx)callScript({action:'updateAdminItem',tabName:'Config_Categorias',rowIndex:catEditIdx,rowArray:d,pass:TOKEN,_noRetry:true},reloadCats,function(e){resetCat();ocultarLoader();alert('Error: '+e);});
-  else callScript({action:'addComplexItem',tabName:'Config_Categorias',rowArray:d,pass:TOKEN,_noRetry:true},reloadCats,function(e){resetCat();ocultarLoader();alert('Error: '+e);});
+  var onErr=function(e){resetCat();ocultarLoader();alert('Error al guardar: '+e);};
+  if(catEditIdx)callScript({action:'updateAdminItem',tabName:'Config_Categorias',rowIndex:catEditIdx,rowArray:d,pass:TOKEN,_noRetry:true},onOk,onErr);
+  else callScript({action:'addComplexItem',tabName:'Config_Categorias',rowArray:d,pass:TOKEN,_noRetry:true},onOk,onErr);
 }
 function limpiarFormCat(){document.getElementById('cNom').value='';document.getElementById('cCol').value='#1a7a3c';document.getElementById('cMin').value='';document.getElementById('cMax').value='';document.getElementById('cGen').value='Masculino';}
 
@@ -1217,9 +1241,9 @@ function cambiarTab(ev,id){
   document.getElementById('tab-'+id).style.display='block';
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
   ev.target.classList.add('active');
-  if(id==='cuotas')renderCuotas();
+  if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.3</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.5</div>
 </body>
 </html>
