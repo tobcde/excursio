@@ -186,6 +186,13 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   .asist-selector{grid-template-columns:1fr 1fr;}
 }
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a7a3c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CA Excursionistas">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
 
@@ -1282,6 +1289,66 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.9</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.0</div>
+
+<!-- PWA Install Banner -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
+  background:linear-gradient(135deg,#0f5228,#0a0d0a);border-top:2px solid #1a7a3c;
+  padding:14px 20px;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,.6);">
+  <img src="icons/icon-192.png" style="width:44px;height:44px;border-radius:8px;flex-shrink:0;">
+  <div style="flex:1;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:white;text-transform:uppercase;">CA Excursionistas</div>
+    <div style="font-size:11px;color:#7a927a;margin-top:2px;">Instalar app en tu celular</div>
+  </div>
+  <button id="pwa-install-btn" style="background:#1a7a3c;color:white;border:none;border-radius:8px;
+    padding:10px 18px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;
+    text-transform:uppercase;cursor:pointer;white-space:nowrap;">INSTALAR</button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none';localStorage.setItem('pwa-dismissed','1');"
+    style="background:none;border:none;color:#7a927a;font-size:22px;cursor:pointer;padding:4px;line-height:1;">&#x2715;</button>
+</div>
+
+<script>
+// Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+// PWA Install banner (Android)
+var deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!localStorage.getItem('pwa-dismissed') && !window.matchMedia('(display-mode: standalone)').matches) {
+    var b = document.getElementById('pwa-banner');
+    if (b) b.style.display = 'flex';
+  }
+});
+var installBtn = document.getElementById('pwa-install-btn');
+if (installBtn) {
+  installBtn.addEventListener('click', function() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(c) {
+      if (c.outcome === 'accepted') {
+        document.getElementById('pwa-banner').style.display = 'none';
+        localStorage.setItem('pwa-dismissed','1');
+      }
+      deferredPrompt = null;
+    });
+  });
+}
+// iOS instructions
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone && !localStorage.getItem('pwa-dismissed')) {
+  var iosBanner = document.createElement('div');
+  iosBanner.style.cssText = 'display:flex;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#0f5228,#0a0d0a);border-top:2px solid #1a7a3c;padding:14px 20px;align-items:center;gap:12px;box-shadow:0 -4px 20px rgba(0,0,0,.6);';
+  iosBanner.innerHTML = '<img src="icons/icon-192.png" style="width:40px;height:40px;border-radius:8px;flex-shrink:0;"><div style="flex:1;"><div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;color:white;text-transform:uppercase;">Instalar en iPhone</div><div style="font-size:11px;color:#7a927a;margin-top:3px;">Toca Compartir y luego Agregar a inicio</div></div><button id="ios-x-btn" style="background:none;border:none;color:#7a927a;font-size:22px;cursor:pointer;padding:4px;line-height:1;">&#x2715;</button>';
+  document.body.appendChild(iosBanner);
+  document.getElementById('ios-x-btn').addEventListener('click', function() {
+    iosBanner.remove();
+    localStorage.setItem('pwa-dismissed','1');
+  });
+}
+</script>
 </body>
 </html>
