@@ -491,12 +491,16 @@ var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxsJd8lVYqWaKWOnB9QLWz
 
 
 function callScript(payload, onSuccess, onError, _retry) {
-  // Asegurar que el token va en ambos campos para compatibilidad
   if (payload.pass && !payload.token) payload.token = payload.pass;
   var url = SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
   fetch(url, {method:'GET', redirect:'follow'})
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
+    .then(function(r) { return r.text(); })
+    .then(function(txt) {
+      var d;
+      try { d = JSON.parse(txt); } catch(e) {
+        // Respuesta no-JSON (ej: "OK") — tratar como exito
+        d = {ok: true, raw: txt};
+      }
       if (d && d.error) { if (onError) onError(d.error); else alert('Error: ' + d.error); }
       else { if (onSuccess) onSuccess(d); }
     })
@@ -1246,6 +1250,6 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.6</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.7</div>
 </body>
 </html>
