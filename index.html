@@ -492,42 +492,44 @@ var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw86r6IMSOdcU_mP3yPXg4
 // ── JSONP helper — reemplaza google.script.run ─────────────
 function callScript(payload, onSuccess, onError, _retryCount) {
   var retries = _retryCount || 0;
-  var cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-  var url = SCRIPT_URL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
-  var done = false;
-  var script = document.createElement('script');
+  // Usar fetch con mode:'no-cors' no funciona porque no podemos leer la respuesta
+  // Usar fetch normal — el GAS debe tener CORS headers en el doGet
+  var url = SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
 
-  function cleanup() {
-    done = true;
-    clearTimeout(timer);
-    delete window[cb];
-    try { document.head.removeChild(script); } catch(e) {}
-  }
-
-  window[cb] = function(data) {
-    if (done) return;
-    cleanup();
-    if (data && data.error) { if(onError) onError(data.error); else alert('Error: '+data.error); }
-    else { if(onSuccess) onSuccess(data); }
-  };
-
-  // Timeout total: 40s para redes lentas
-  var timer = setTimeout(function() {
-    if (done) return;
-    cleanup();
-    if (retries < 2) {
-      setTimeout(function() { callScript(payload, onSuccess, onError, retries+1); }, 2000);
-    } else {
-      if (onError) onError('Tiempo agotado. Verifica tu conexion a internet.');
-    }
-  }, 40000);
-
-  script.src = url;
-  // IMPORTANTE: NO usar onerror para cancelar.
-  // En Chrome mobile el onerror se dispara por el redirect de Google
-  // pero el callback llega igual despues. Ignorar onerror completamente.
-  script.onerror = function() { /* ignorar - el callback puede llegar igual */ };
-  document.head.appendChild(script);
+  fetch(url, { method: 'GET', redirect: 'follow' })
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    })
+    .then(function(txt) {
+      // El GAS puede devolver JSON puro o JSONP — manejar ambos
+      var data;
+      try {
+        // Intentar JSON puro primero
+        data = JSON.parse(txt);
+      } catch(e) {
+        // Si es JSONP: callback({...}) — extraer el JSON
+        var s = txt.indexOf('(');
+        var e2 = txt.lastIndexOf(')');
+        if (s >= 0 && e2 > s) {
+          data = JSON.parse(txt.substring(s + 1, e2));
+        } else {
+          throw new Error('Respuesta invalida del servidor');
+        }
+      }
+      if (data && data.error) {
+        if (onError) onError(data.error);
+      } else {
+        if (onSuccess) onSuccess(data);
+      }
+    })
+    .catch(function(err) {
+      if (retries < 2) {
+        setTimeout(function() { callScript(payload, onSuccess, onError, retries + 1); }, 3000);
+      } else {
+        if (onError) onError('Error de conexion: ' + err.message + '. Verifica tu internet.');
+      }
+    });
 }
 
 var DB={jugadores:[],profesores:[],sedes:[],categorias:[],horarios:[],configPagos:[]};
