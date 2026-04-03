@@ -1095,7 +1095,13 @@ function renderList(id,data,tabla){
   el.addEventListener('click',function(e){var btn=e.target.closest('[data-action="borrar"]');if(btn)borrar(btn.dataset.tabla,parseInt(btn.dataset.row));});
 }
 
-function crearSimple(t,id){var v=document.getElementById(id).value.trim();if(!v)return alert('Ingresa un valor');mostrarLoader('Guardando...');callScript({action:'addComplexItem',tabName:t,rowArray:[v],pass:TOKEN},function(){document.getElementById(id).value='';inicializar();});}
+function crearSimple(t,id){
+  var v=document.getElementById(id).value.trim();if(!v)return alert('Ingresa un valor');
+  // Limpiar input inmediatamente para evitar doble envio
+  document.getElementById(id).value='';
+  mostrarLoader('Guardando...');
+  callScript({action:'addComplexItem',tabName:t,rowArray:[v],pass:TOKEN,_noRetry:true},inicializar,function(e){ocultarLoader();alert('Error: '+e);});
+}
 function borrar(t,r){if(!confirm('Eliminar?'))return;mostrarLoader('Eliminando...');callScript({action:'deleteAdminItem',tabName:t,rowIndex:r,pass:TOKEN},inicializar);}
 
 function renderListCat(){
@@ -1113,18 +1119,28 @@ function renderListCat(){
 }
 function cargarEditCat(idx,n,co,mi,ma,g){catEditIdx=idx;document.getElementById('cNom').value=n;document.getElementById('cCol').value=co;document.getElementById('cMin').value=mi;document.getElementById('cMax').value=ma;document.getElementById('cGen').value=g;document.getElementById('btnCat').innerText='ACTUALIZAR';document.getElementById('btnCat').style.background='var(--orange)';document.getElementById('cardCat').style.borderColor='var(--orange)';}
 function guardarCat(){
+  var btn=document.getElementById('btnCat');
+  if(btn && btn.disabled) return; // evitar doble click
   var d=[document.getElementById('cNom').value,document.getElementById('cCol').value,document.getElementById('cMin').value,document.getElementById('cMax').value,document.getElementById('cGen').value];
   if(!d[0]||!d[2]||!d[3])return alert('Completa todos los campos');
+  // Deshabilitar boton inmediatamente para evitar doble envio
+  if(btn){btn.disabled=true;btn.style.opacity='0.6';}
   mostrarLoader('Guardando...');
-  var resetCat=function(){catEditIdx=null;document.getElementById('btnCat').innerText='GUARDAR CATEGORIA';document.getElementById('btnCat').style.background='';document.getElementById('cardCat').style.borderColor='';limpiarFormCat();};
+  var resetCat=function(){
+    catEditIdx=null;
+    if(btn){btn.disabled=false;btn.style.opacity='';btn.innerText='GUARDAR CATEGORIA';btn.style.background='';}
+    document.getElementById('cardCat').style.borderColor='';
+    limpiarFormCat();
+  };
   var reloadCats=function(){
+    // Actualizar local directamente sin llamar getData completo
     callScript({action:'getData',pass:TOKEN,_noRetry:true},function(dat){
       if(dat&&!dat.error){DB.categorias=dat.categorias;}
       resetCat();renderListCat();poblarSelects();ocultarLoader();toast('Categoria guardada','ok');
     },function(){resetCat();ocultarLoader();toast('Guardado. Recarga para ver.','ok');});
   };
-  if(catEditIdx)callScript({action:'updateAdminItem',tabName:'Config_Categorias',rowIndex:catEditIdx,rowArray:d,pass:TOKEN},reloadCats);
-  else callScript({action:'addComplexItem',tabName:'Config_Categorias',rowArray:d,pass:TOKEN},reloadCats);
+  if(catEditIdx)callScript({action:'updateAdminItem',tabName:'Config_Categorias',rowIndex:catEditIdx,rowArray:d,pass:TOKEN,_noRetry:true},reloadCats,function(e){resetCat();ocultarLoader();alert('Error: '+e);});
+  else callScript({action:'addComplexItem',tabName:'Config_Categorias',rowArray:d,pass:TOKEN,_noRetry:true},reloadCats,function(e){resetCat();ocultarLoader();alert('Error: '+e);});
 }
 function limpiarFormCat(){document.getElementById('cNom').value='';document.getElementById('cCol').value='#1a7a3c';document.getElementById('cMin').value='';document.getElementById('cMax').value='';document.getElementById('cGen').value='Masculino';}
 
