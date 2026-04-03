@@ -495,10 +495,17 @@ function _discoverURL(cb) {
   if (_BASE_URL) { cb(_BASE_URL); return; }
   var cached = localStorage.getItem('gas_base_url_v2');
   if (cached) { _BASE_URL = cached; cb(_BASE_URL); return; }
+  // Usar fetch para descubrir la URL real de googleusercontent (sin redirect de Google)
+  // La URL final tiene la forma: https://script.googleusercontent.com/macros/echo?user_content_key=XXX&lib=YYY
+  // Necesitamos guardar TODA la URL base (sin el callback= que agregamos nosotros)
   fetch(SCRIPT_URL + '?callback=p&payload=%7B%7D', {method:'GET',redirect:'follow'})
     .then(function(r) {
-      var full = r.url, q = full.indexOf('?');
-      _BASE_URL = q > 0 ? full.substring(0, q) : full;
+      var full = r.url;
+      // Quitar el param callback=p que nosotros pusimos, mantener el resto (user_content_key, lib)
+      var cleaned = full.replace(/[?&]callback=[^&]*/, '').replace(/[?&]payload=[^&]*/, '');
+      // Si quedó ? al inicio de los params, normalizar
+      cleaned = cleaned.replace(/&&/g, '&').replace(/\?&/, '?');
+      _BASE_URL = cleaned;
       localStorage.setItem('gas_base_url_v2', _BASE_URL);
       cb(_BASE_URL);
     })
@@ -507,7 +514,9 @@ function _discoverURL(cb) {
 function callScript(payload, onSuccess, onError, _retry) {
   _discoverURL(function(baseURL) {
     var cb = 'gs_' + Date.now() + '_' + Math.floor(Math.random()*99999);
-    var url = baseURL + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+    // Si baseURL ya tiene ?, usar & para agregar params; si no, usar ?
+    var sep = baseURL.indexOf('?') >= 0 ? '&' : '?';
+    var url = baseURL + sep + 'callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
     var done = false;
     var script = document.createElement('script');
     var timer = setTimeout(function() {
