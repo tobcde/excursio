@@ -487,60 +487,24 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 // ESTADO GLOBAL
 // ═══════════════════════════════════════════════════════════
 // ── URL DEL APPS SCRIPT (API) ─────────────────────────────
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxit9v0XTBTP_6IZqnKx-wHm1IBSf0ehjXkCm8dXzHl-LaNykbGkSMRHx3Hv34ANH6SFQ/exec';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxsJd8lVYqWaKWOnB9QLWzdm8rndwKdhpi7tp4OVt3uCnHNy7LFISxLS8IZLsid5kYKVQ/exec';
 
 
-var _BASE_URL = null;
-function _discoverURL(cb) {
-  if (_BASE_URL) { cb(_BASE_URL); return; }
-  var cached = localStorage.getItem('gas_base_url_v2');
-  if (cached) { _BASE_URL = cached; cb(_BASE_URL); return; }
-  // Usar fetch para descubrir la URL real de googleusercontent (sin redirect de Google)
-  // La URL final tiene la forma: https://script.googleusercontent.com/macros/echo?user_content_key=XXX&lib=YYY
-  // Necesitamos guardar TODA la URL base (sin el callback= que agregamos nosotros)
-  fetch(SCRIPT_URL + '?callback=p&payload=%7B%7D', {method:'GET',redirect:'follow'})
-    .then(function(r) {
-      var full = r.url;
-      // Quitar el param callback=p que nosotros pusimos, mantener el resto (user_content_key, lib)
-      var cleaned = full.replace(/[?&]callback=[^&]*/, '').replace(/[?&]payload=[^&]*/, '');
-      // Si quedó ? al inicio de los params, normalizar
-      cleaned = cleaned.replace(/&&/g, '&').replace(/\?&/, '?');
-      _BASE_URL = cleaned;
-      localStorage.setItem('gas_base_url_v2', _BASE_URL);
-      cb(_BASE_URL);
-    })
-    .catch(function() { _BASE_URL = SCRIPT_URL; cb(_BASE_URL); });
-}
 function callScript(payload, onSuccess, onError, _retry) {
-  _discoverURL(function(baseURL) {
-    var cb = 'gs_' + Date.now() + '_' + Math.floor(Math.random()*99999);
-    // Si baseURL ya tiene ?, usar & para agregar params; si no, usar ?
-    var sep = baseURL.indexOf('?') >= 0 ? '&' : '?';
-    var url = baseURL + sep + 'callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
-    var done = false;
-    var script = document.createElement('script');
-    var timer = setTimeout(function() {
-      if (done) return;
-      done = true; delete window[cb];
-      if (script.parentNode) script.parentNode.removeChild(script);
+  var url = SCRIPT_URL + '?payload=' + encodeURIComponent(JSON.stringify(payload));
+  fetch(url, {method:'GET', redirect:'follow'})
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.error) { if (onError) onError(d.error); else alert('Error: ' + d.error); }
+      else { if (onSuccess) onSuccess(d); }
+    })
+    .catch(function(e) {
       if (!_retry && !payload._noRetry) {
-        _BASE_URL = null; localStorage.removeItem('gas_base_url_v2');
-        setTimeout(function() { callScript(payload, onSuccess, onError, true); }, 1000);
+        setTimeout(function() { callScript(payload, onSuccess, onError, true); }, 2000);
       } else {
-        if (onError) onError('Sin respuesta. Verifica tu conexion.');
+        if (onError) onError('Sin conexion. Verifica tu internet e intenta de nuevo.');
       }
-    }, 20000);
-    window[cb] = function(data) {
-      if (done) return;
-      done = true; clearTimeout(timer); delete window[cb];
-      if (script.parentNode) script.parentNode.removeChild(script);
-      if (data && data.error) { if (onError) onError(data.error); }
-      else { if (onSuccess) onSuccess(data); }
-    };
-    script.src = url;
-    script.onerror = function() { /* ignorar */ };
-    document.head.appendChild(script);
-  });
+    });
 }
 var DB={jugadores:[],profesores:[],sedes:[],categorias:[],horarios:[],configPagos:[]};
 var CUOTAS_DB={planes:[],cuotas:[]};
