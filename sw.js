@@ -1,6 +1,6 @@
 // Service Worker - Excursionistas FC
 // Cache version - incrementar al actualizar
-const CACHE_NAME = 'excursio-v1';
+const CACHE_NAME = 'excursio-v3';
 
 // Archivos a cachear para funcionamiento offline
 const STATIC_FILES = [
