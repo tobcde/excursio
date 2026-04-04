@@ -804,8 +804,13 @@ function renderCuotas(){
     var moTotal=mo+moSoc;
     var cv=estadoCuotaV2(f),est=cv.estado;
     var pagos=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;});
+    // Sumar todos los pagos vigentes del periodo (actividad + social)
+    var hoy2=new Date();hoy2.setHours(0,0,0,0);
+    var pagosVigentes=pagos.filter(function(c){var h=parseDate(c[4]);return h&&h>=hoy2;});
+    var pagado=pagosVigentes.reduce(function(s,c){return s+Number(c[6]||0);},0);
     var ult=pagos.length?pagos[pagos.length-1]:null;
-    var pagado=ult?Number(ult[6]||0):0,fp=ult?ult[5]||'':'';
+    var fp=ult?ult[5]||'':'';
+    var hastaStr=pagosVigentes.length?pagosVigentes.reduce(function(mx,c){var h=parseDate(c[4]);return(!mx||h>mx)?h:mx;},null):null;
     if(filt==='sinplan'&&pl)return;
     if(filt==='ok'&&est!=='ok')return;
     if(filt==='debe'&&est!=='debe')return;
@@ -814,7 +819,7 @@ function renderCuotas(){
     if(fcat&&cat!==fcat)return;
     if(busq&&!nom.includes(busq)&&!dni.includes(busq))return;
     if(pl){tc++;es+=mo;if(est==='ok'){pa++;re+=pagado;}else if(est==='vence'){pv++;re+=pagado;}else de++;}
-    rows.push({f:f,pl:pl,mo:mo,plSoc:plSoc,moSoc:moSoc,moTotal:moTotal,est:est,hasta:cv.hasta,pagado:pagado,fp:fp});
+    rows.push({f:f,pl:pl,mo:mo,plSoc:plSoc,moSoc:moSoc,moTotal:moTotal,est:est,hasta:cv.hasta,hastaStr:hastaStr,pagado:pagado,fp:fp});
   });
   document.getElementById('rc-total').innerText=tc;
   document.getElementById('rc-pagaron').innerText=pa;
@@ -839,7 +844,7 @@ function renderCuotas(){
       +'<div class="ct-sub" style="font-weight:700;color:var(--dorado);">'+(it.moTotal?'$'+it.moTotal.toLocaleString('es-AR'):'')+'</div>'
       +'</div>';
     html+='<div style="font-size:13px;font-weight:700;">'+(it.pagado?'$'+it.pagado.toLocaleString('es-AR'):'-')+'</div>';
-    html+='<div style="font-size:12px;color:var(--muted);">'+(it.hasta?formatDate(it.hasta):'-')+'</div>';
+    html+='<div style="font-size:12px;color:var(--muted);">'+(it.hastaStr?formatDate(it.hastaStr):it.hasta?formatDate(it.hasta):'-')+'</div>';
     html+='<div><button class="btn btn-save" style="padding:6px 10px;font-size:11px;" data-idx="'+idx+'" data-action="cobrar">COBRAR</button></div>';
     html+='</div>';
   });
@@ -1513,7 +1518,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.1</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.2</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
