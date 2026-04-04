@@ -977,7 +977,7 @@ function renderPeriodosAdmin(){
   el.innerHTML=PERIODOS_EDIT.map(function(p,idx){
     var desde=getFechaDesde(p),hasta=getFechaHasta(p),vence=getFechaVenc(p);
     var cls=hoy>vence?'vencido':hoy>=desde&&hoy<=vence?'activo':'proximo';
-    var lbl=cls==='activo'?'ACTIVO':cls==='vencido'?'VENCIDO':'PRÓXIMO';
+    var lbl=cls==='activo'?'ACTIVO':cls==='vencido'?'VENCIDO':'PROXIMO';
     var color=cls==='activo'?'var(--verde)':cls==='vencido'?'var(--red)':'var(--dorado)';
     var bg=cls==='activo'?'var(--verde-dim)':cls==='vencido'?'var(--red-dim)':'var(--dorado-dim)';
     return'<div class="periodo-card '+cls+'">'
