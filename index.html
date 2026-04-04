@@ -968,7 +968,7 @@ function confirmarPago(){
   mostrarLoader('Registrando pago...');
   // Funcion para registrar el pago social (si corresponde)
   function _registrarSocial(){
-    if(!_plSoc||_moSoc<=0){cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();return;}
+    if(!_plSoc||_moSoc<=0){cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();ofrecerEnvioComprobante(window._ultimoPago);return;}
     var pSoc={dni:pagoCtx.dni,nombre:pagoCtx.nombre,plan:_plSoc,periodoDesde:desde,periodoHasta:hasta,
       fechaPago:_fecha,monto:_moSoc,
       metodo:_metodo,cobrador:_cobrador,
@@ -976,6 +976,7 @@ function confirmarPago(){
     callScript({action:'registrarPago',pago:pSoc,pass:TOKEN,_noRetry:true},function(){
       CUOTAS_DB.cuotas.push([pSoc.dni,pSoc.nombre,pSoc.plan,pSoc.periodoDesde,pSoc.periodoHasta,pSoc.fechaPago,pSoc.monto,pSoc.metodo,pSoc.cobrador,pSoc.obs,pSoc.hojaOrigen,Date.now()]);
       cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();
+      ofrecerEnvioComprobante(window._ultimoPago);
     },function(e){alert('Error al registrar cuota social: '+e);ocultarLoader();});
   }
   callScript({action:'registrarPago',pago:p,pass:TOKEN,_noRetry:true},function(){
@@ -1593,7 +1594,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.6</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.7</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
@@ -1669,6 +1670,42 @@ window.addEventListener('load', function() {
 });
 
 // Registrar huella después del primer login exitoso
+function ofrecerEnvioComprobante(datos) {
+  if(!datos) return;
+  var email = (datos.email||'');
+  document.getElementById('comp-nombre').innerText = datos.nombre||'';
+  document.getElementById('comp-email').value = email;
+  document.getElementById('comp-plan').innerText = (datos.planAct||'')+(datos.plSoc?' + '+datos.plSoc:'');
+  document.getElementById('comp-monto').innerText = '$'+Number(datos.moTotal||0).toLocaleString('es-AR');
+  document.getElementById('comp-periodo').innerText = datos.periodo||'';
+  document.getElementById('comp-hasta').innerText = datos.vigente||'';
+  document.getElementById('comp-cobrador').innerText = datos.cobrador||'';
+  document.getElementById('modalComprobante').classList.add('open');
+}
+
+function cerrarModalComprobante() {
+  document.getElementById('modalComprobante').classList.remove('open');
+}
+
+function enviarComprobanteEmail() {
+  var email = document.getElementById('comp-email').value.trim();
+  if(!email||!email.includes('@')) return alert('Ingresa un email valido');
+  var datos = window._ultimoPago;
+  if(!datos) return alert('No hay datos de pago');
+  datos.email = email;
+  datos.planSoc = datos.plSoc||'';
+  mostrarLoader('Enviando comprobante...');
+  callScript({action:'enviarComprobante',datos:datos,pass:TOKEN,_noRetry:true},
+    function(r){
+      ocultarLoader();
+      if(r&&r.ok===false){alert('Error: '+(r.error||'desconocido'));return;}
+      cerrarModalComprobante();
+      toast('Comprobante enviado a '+email,'ok');
+    },
+    function(e){ocultarLoader();alert('Error al enviar: '+e);}
+  );
+}
+
 function registrarHuella(pass) {
   if (!window.PublicKeyCredential) return;
   if (localStorage.getItem(WA_CRED_KEY)) return; // ya registrada
