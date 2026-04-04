@@ -638,23 +638,20 @@ function getFechaDesde(p){return new Date(p.anioD,p.mes-1,parseInt(p.diaD)||1);}
 function getFechaHasta(p){var anioH=p.anioH||p.anioD,diaH=parseInt(p.diaH)||0;if(diaH===0)diaH=ultimoDiaMes(anioH,p.mes);return new Date(anioH,p.mes-1,diaH);}
 function getFechaVenc(p){var v=new Date(getFechaHasta(p));v.setDate(v.getDate()+(parseInt(p.gracia)||0));return v;}
 
+function getPlanSocialJ(f){
+  var sc=String(f[COL.SOCIO_CLUB]||'').trim().toLowerCase();
+  if(sc==='si'||sc==='true') return null;
+  var cat=String(f[COL.CATEGORIA_APP]||'').trim().toLowerCase();
+  var MAP={'cuarta':'SOCIAL INFERIORES','sexta':'SOCIAL INFERIORES','septima':'SOCIAL INFERIORES','octava':'SOCIAL INFERIORES','quinta':'SOCIAL INFERIORES','tercera':'SOCIAL TERCERA Y PRIMERA','primera':'SOCIAL TERCERA Y PRIMERA','promocionales 16':'SOCIAL PROMOCIONALES','promocionales 17':'SOCIAL PROMOCIONALES','promocionales 18':'SOCIAL PROMOCIONALES','escuelita':'SOCIAL PROMOCIONALES'};
+  return MAP[cat]||null;
+}
+
 function estadoCuotaV2(f){
   var planNom=getPlanJ(f);
   if(!planNom)return{estado:'none',hasta:null,deuda:0,deudaActividad:0,deudaSocial:0,planNom:null,planSocialNom:null,planMonto:0,planSocialMonto:0};
   var planObj=getPlanObj(planNom);
   var planMonto=planObj?Number(planObj[1])||0:0;
   
-function getPlanSocialJ(f){
-  var sc=String(f[COL.SOCIO_CLUB]||'').trim().toLowerCase();
-  if(sc==='si'||sc==='true') return null;
-  var cat=String(f[COL.CATEGORIA_APP]||'').trim().toLowerCase();
-  var MAP={'cuarta':'SOCIAL INFERIORES','sexta':'SOCIAL INFERIORES','septima':'SOCIAL INFERIORES',
-    'octava':'SOCIAL INFERIORES','quinta':'SOCIAL INFERIORES',
-    'tercera':'SOCIAL TERCERA Y PRIMERA','primera':'SOCIAL TERCERA Y PRIMERA',
-    'promocionales 16':'SOCIAL PROMOCIONALES','promocionales 17':'SOCIAL PROMOCIONALES',
-    'promocionales 18':'SOCIAL PROMOCIONALES','escuelita':'SOCIAL PROMOCIONALES'};
-  return MAP[cat]||null;
-}
 var planSocialNom=getPlanSocialJ(f);
   var planSocialObj=planSocialNom?getPlanObj(planSocialNom):null;
   var planSocialMonto=planSocialObj?Number(planSocialObj[1])||0:0;
@@ -1483,7 +1480,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.7</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.8</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
