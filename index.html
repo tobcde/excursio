@@ -1180,29 +1180,24 @@ function autoAsignarPlanes(){
 
   // Mapa categoria -> nombre del plan (nombres exactos de Config_Categorias)
   var PLAN_POR_CAT = {
-    // Inferiores
-    'Cuarta':   'Cuota actividad inferiores',
-    'sexta':    'Cuota actividad inferiores',
-    'septima':  'Cuota actividad inferiores',
-    'octava':   'Cuota actividad inferiores',
-    'quinta':   'Cuota actividad inferiores',
-    // Tercera y Primera
-    'tercera':  'Cuota actividad 3ra',
-    'primera':  'Cuota actividad 1ra',
-    // Promocionales (16, 17, 18) y escuelita -> mismo plan
+    'cuarta':           'Cuota actividad inferiores',
+    'sexta':            'Cuota actividad inferiores',
+    'septima':          'Cuota actividad inferiores',
+    'octava':           'Cuota actividad inferiores',
+    'quinta':           'Cuota actividad inferiores',
+    'tercera':          'Cuota actividad 3ra',
+    'primera':          'Cuota actividad 1ra',
     'promocionales 16': 'Cuota actividad promocionales',
     'promocionales 17': 'Cuota actividad promocionales',
     'promocionales 18': 'Cuota actividad promocionales',
     'escuelita':        'Cuota actividad promocionales',
   };
-  // Busqueda case-insensitive
-  var catNorm = String(f[COL.CATEGORIA_APP]||'').trim().toLowerCase();
 
   var upd = [];
   DB.jugadores.slice(1).forEach(function(f) {
     var act = f[COL.ACTIVO];
-    if(!(act===true||String(act).toLowerCase()==='si')) return; // solo activos
-    var cat = String(f[COL.CATEGORIA_APP]||'').trim(); // para otros usos
+    if(!(act===true||String(act).toLowerCase()==='si')) return;
+    var catNorm = String(f[COL.CATEGORIA_APP]||'').trim().toLowerCase();
     var planActual = String(f[COL.PLAN]||'').trim();
     var planNuevo = PLAN_POR_CAT[catNorm] || null;
     if(planNuevo && planNuevo !== planActual) {
@@ -1412,7 +1407,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.5</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.6</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
