@@ -1186,7 +1186,7 @@ function abrirM(ai){
     if(_sc==='si')ecHtml+='<div style="margin-top:6px;"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;">Cuota Social</span><br><span style="color:#6de097;font-size:12px;">Socio del club -- exento</span></div>';
   }
   if(!cv.planNom)ecHtml='<span style="color:var(--muted);">Sin plan asignado</span>';
-  ec.innerHTML=ecHtml">Sin plan asignado</span>';
+  ec.innerHTML=ecHtml;
   document.getElementById('m-plan').value=getPlanJ(f)||'';
   document.getElementById('m-liga').value=String(f[COL.LIGA]||'Ambas').trim();
   var _sc=String(f[COL.SOCIO_CLUB]||'').trim().toLowerCase();document.getElementById('m-socio-club').checked=(_sc==='si'||_sc==='true');
