@@ -702,7 +702,7 @@ var planSocialNom=getPlanSocialJ(f);
 
 // ── PLANES ──────────────────────────────────────────────
 function getPlanJ(f){return(f[COL.PLAN]||'').toString().trim();}
-function getPlanObj(n){return CUOTAS_DB.planes.find(function(p){return p[0]===n;});}
+function getPlanObj(n){if(!n)return null;var _n=(n||'').toString().trim().toLowerCase();return CUOTAS_DB.planes.find(function(p){return(p[0]||'').toString().trim().toLowerCase()===_n;});}
 function periodoLabel(p){var a=p.split('-');var m=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return m[parseInt(a[1])-1]+' '+a[0];}
 
 // ── RENDER SOCIOS ────────────────────────────────────────
@@ -828,8 +828,8 @@ function renderCuotas(){
   var html='';
   rows.forEach(function(it,idx){
     var f=it.f;
-    var cl=it.est==='ok'?'cuota-ok':it.est==='debe'?'cuota-debe':it.est==='vence'?'cuota-vence':'cuota-none';
-    var lb=it.est==='ok'?'Al dia':it.est==='debe'?'DEBE':it.est==='vence'?'POR VENCER':'Sin plan';
+    var cl=it.est==='ok'?'cuota-ok':it.est==='debe'?'cuota-debe':it.est==='vence'?'cuota-vence':it.est==='parcial'?'cuota-parcial':'cuota-none';
+    var lb=it.est==='ok'?'Al dia':it.est==='debe'?'DEBE':it.est==='vence'?'POR VENCER':it.est==='parcial'?'PARCIAL':'Sin plan';
     html+='<div class="ct-row">';
     html+='<div><div class="ct-nombre">'+(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'')+'</div><div class="ct-sub">DNI: '+(f[COL.DNI]||f[COL.TARJETA]||'')+' | '+(f[COL.CATEGORIA_APP]||'Sin cat.')+'</div></div>';
     html+='<div><span class="cuota-pill '+cl+'">'+lb+'</span></div>';
@@ -1513,7 +1513,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.0</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.1</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
