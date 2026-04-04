@@ -277,7 +277,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
     <div class="asist-selector">
       <div class="filter-group"><label class="filter-label">Fecha</label><input type="date" id="asistFecha" class="filter-select"></div>
       <div class="filter-group"><label class="filter-label">Turno</label>
-        <select id="asistTurno" class="filter-select"><option value="">-- Sin turno específico --</option></select></div>
+        <select id="asistTurno" class="filter-select"><option value="">-- Sin turno especifico --</option></select></div>
       <div class="filter-group"><label class="filter-label">Categoria</label>
         <select id="asistCat" class="filter-select"><option value="">Todas</option></select></div>
       <button class="btn btn-gold" onclick="cargarListaAsist()">CARGAR</button>
@@ -972,7 +972,7 @@ function generarPeriodosAnio(){
 function eliminarPeriodoEdit(idx){PERIODOS_EDIT.splice(idx,1);renderPeriodosAdmin();}
 function renderPeriodosAdmin(){
   var el=document.getElementById('listPeriodos');
-  if(!PERIODOS_EDIT.length){el.innerHTML='<p style="color:var(--muted);font-size:12px;">Sin periodos. Usá GENERAR ANO COMPLETO.</p>';return;}
+  if(!PERIODOS_EDIT.length){el.innerHTML='<p style="color:var(--muted);font-size:12px;">Sin periodos. Usa GENERAR ANO COMPLETO.</p>';return;}
   var hoy=new Date();hoy.setHours(0,0,0,0);
   el.innerHTML=PERIODOS_EDIT.map(function(p,idx){
     var desde=getFechaDesde(p),hasta=getFechaHasta(p),vence=getFechaVenc(p);
@@ -1004,7 +1004,7 @@ function guardarPeriodos(){
 // ── ASISTENCIAS ──────────────────────────────────────────
 function poblarTurnosAsist(){
   var sel=document.getElementById('asistTurno');
-  sel.innerHTML='<option value="">-- Sin turno específico --</option>';
+  sel.innerHTML='<option value="">-- Sin turno especifico --</option>';
   DB.horarios.forEach(function(h,i){var liga=h[5]||'Ambas';var ll=liga!=='Ambas'?' ['+liga+']':'';sel.innerHTML+='<option value="'+i+'">'+h[0]+' '+h[1]+'hs - '+h[4]+ll+' ('+h[2]+')</option>';});
   var sc=document.getElementById('asistCat');sc.innerHTML='<option value="">Todas</option>';
   DB.categorias.forEach(function(c){sc.innerHTML+='<option>'+c[0]+'</option>';});
@@ -1183,7 +1183,7 @@ function abrirM(ai){
     ecHtml+=' <small style="color:var(--muted);">('+cv.planSocialNom+')</small></div>';
   } else if(cv.planNom){
     var _sc=String(f[COL.SOCIO_CLUB]||'').trim().toLowerCase();
-    if(_sc==='si')ecHtml+='<div style="margin-top:6px;"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;">Cuota Social</span><br><span style="color:#6de097;font-size:12px;">Socio del club — exento</span></div>';
+    if(_sc==='si')ecHtml+='<div style="margin-top:6px;"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;">Cuota Social</span><br><span style="color:#6de097;font-size:12px;">Socio del club -- exento</span></div>';
   }
   if(!cv.planNom)ecHtml='<span style="color:var(--muted);">Sin plan asignado</span>';
   ec.innerHTML=ecHtml">Sin plan asignado</span>';
