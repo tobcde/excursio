@@ -800,6 +800,8 @@ function renderCuotas(){
     var nom=(f[COL.APELLIDO]+' '+f[COL.NOMBRE]||'').toLowerCase();
     var dni=(f[COL.DNI]||f[COL.TARJETA]||'').toString(),cat=f[COL.CATEGORIA_APP]||'';
     var pl=getPlanJ(f),po=getPlanObj(pl),mo=po?Number(po[1]):0;
+    var plSoc=getPlanSocialJ(f),poSoc=plSoc?getPlanObj(plSoc):null,moSoc=poSoc?Number(poSoc[1]):0;
+    var moTotal=mo+moSoc;
     var cv=estadoCuotaV2(f),est=cv.estado;
     var pagos=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;});
     var ult=pagos.length?pagos[pagos.length-1]:null;
@@ -812,7 +814,7 @@ function renderCuotas(){
     if(fcat&&cat!==fcat)return;
     if(busq&&!nom.includes(busq)&&!dni.includes(busq))return;
     if(pl){tc++;es+=mo;if(est==='ok'){pa++;re+=pagado;}else if(est==='vence'){pv++;re+=pagado;}else de++;}
-    rows.push({f:f,pl:pl,mo:mo,est:est,hasta:cv.hasta,pagado:pagado,fp:fp});
+    rows.push({f:f,pl:pl,mo:mo,plSoc:plSoc,moSoc:moSoc,moTotal:moTotal,est:est,hasta:cv.hasta,pagado:pagado,fp:fp});
   });
   document.getElementById('rc-total').innerText=tc;
   document.getElementById('rc-pagaron').innerText=pa;
@@ -831,7 +833,11 @@ function renderCuotas(){
     html+='<div class="ct-row">';
     html+='<div><div class="ct-nombre">'+(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'')+'</div><div class="ct-sub">DNI: '+(f[COL.DNI]||f[COL.TARJETA]||'')+' | '+(f[COL.CATEGORIA_APP]||'Sin cat.')+'</div></div>';
     html+='<div><span class="cuota-pill '+cl+'">'+lb+'</span></div>';
-    html+='<div><div style="font-size:12px;font-weight:600;">'+(it.pl||'-')+'</div><div class="ct-sub">'+(it.mo?'$'+it.mo.toLocaleString('es-AR'):'')+'</div></div>';
+    html+='<div>'
+      +'<div style="font-size:12px;font-weight:600;">'+(it.pl||'-')+'</div>'
+      +(it.plSoc?'<div style="font-size:11px;color:var(--muted);">+'+it.plSoc+'</div>':'')
+      +'<div class="ct-sub" style="font-weight:700;color:var(--dorado);">'+(it.moTotal?'$'+it.moTotal.toLocaleString('es-AR'):'')+'</div>'
+      +'</div>';
     html+='<div style="font-size:13px;font-weight:700;">'+(it.pagado?'$'+it.pagado.toLocaleString('es-AR'):'-')+'</div>';
     html+='<div style="font-size:12px;color:var(--muted);">'+(it.hasta?formatDate(it.hasta):'-')+'</div>';
     html+='<div><button class="btn btn-save" style="padding:6px 10px;font-size:11px;" data-idx="'+idx+'" data-action="cobrar">COBRAR</button></div>';
@@ -841,13 +847,15 @@ function renderCuotas(){
   lista.onclick=function(e){
     var btn=e.target.closest('[data-action]');if(!btn)return;
     var it=window._cuotaRows[parseInt(btn.dataset.idx)];
-    if(it)abrirModalPago(it.f[COL.DNI]||it.f[COL.TARJETA],it.f[COL.APELLIDO]+' '+it.f[COL.NOMBRE],it.pl,it.f[it.f.length-2],it.mo);
+    if(it)abrirModalPago(it.f[COL.DNI]||it.f[COL.TARJETA],it.f[COL.APELLIDO]+' '+it.f[COL.NOMBRE],it.pl,it.f[it.f.length-2],it.moTotal,it.plSoc,it.moSoc);
   };
 }
 
-function abrirModalPago(dni,nom,pl,hoja,mo){
-  pagoCtx={dni:dni,nombre:nom,planNom:pl,hoja:hoja};
-  document.getElementById('mp-sub').innerText=nom+(pl?' - '+pl:'');
+function abrirModalPago(dni,nom,pl,hoja,mo,plSoc,moSoc){
+  pagoCtx={dni:dni,nombre:nom,planNom:pl,hoja:hoja,plSoc:plSoc,moSoc:moSoc};
+  var desc=pl||'';
+  if(plSoc)desc+=' + '+plSoc;
+  document.getElementById('mp-sub').innerText=nom+(desc?' - '+desc:'');
   var now=new Date();
   document.getElementById('mp-fecha').value=now.toISOString().split('T')[0];
   document.getElementById('mp-desde').value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
