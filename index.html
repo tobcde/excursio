@@ -180,8 +180,15 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 .periodo-card.proximo{border-color:var(--dorado);}
 
 @media(max-width:650px){
-  .ct-row,.ct-header-row{grid-template-columns:1fr 1fr auto;}
-  .ct-row>*:nth-child(3),.ct-row>*:nth-child(4),.ct-header-row>*:nth-child(3),.ct-header-row>*:nth-child(4){display:none;}
+  /* Cuotas: layout mobile tipo card */
+  .ct-header-row{display:none;}
+  .ct-row{
+    display:flex;flex-direction:column;gap:6px;
+    padding:12px 16px;position:relative;
+  }
+  .ct-row-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .ct-row-mid{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .ct-row-bot{display:flex;justify-content:flex-end;}
   .modal-grid{grid-template-columns:1fr;}
   .asist-selector{grid-template-columns:1fr 1fr;}
 }
@@ -838,17 +845,36 @@ function renderCuotas(){
     var f=it.f;
     var cl=it.est==='ok'?'cuota-ok':it.est==='debe'?'cuota-debe':it.est==='vence'?'cuota-vence':it.est==='parcial'?'cuota-parcial':'cuota-none';
     var lb=it.est==='ok'?'Al dia':it.est==='debe'?'DEBE':it.est==='vence'?'POR VENCER':it.est==='parcial'?'PARCIAL':'Sin plan';
+    var _planDesc=(it.pl||'-')+(it.plSoc?' + '+it.plSoc:'');
+    var _montoExp=it.moTotal?'$'+it.moTotal.toLocaleString('es-AR'):'';
+    var _montoPag=it.pagado?'$'+it.pagado.toLocaleString('es-AR'):'-';
+    var _vigente=it.hastaStr?formatDate(it.hastaStr):it.hasta?formatDate(it.hasta):'-';
     html+='<div class="ct-row">';
-    html+='<div><div class="ct-nombre">'+(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'')+'</div><div class="ct-sub">DNI: '+(f[COL.DNI]||f[COL.TARJETA]||'')+' | '+(f[COL.CATEGORIA_APP]||'Sin cat.')+'</div></div>';
-    html+='<div><span class="cuota-pill '+cl+'">'+lb+'</span></div>';
-    html+='<div>'
-      +'<div style="font-size:12px;font-weight:600;">'+(it.pl||'-')+'</div>'
-      +(it.plSoc?'<div style="font-size:11px;color:var(--muted);">+'+it.plSoc+'</div>':'')
-      +'<div class="ct-sub" style="font-weight:700;color:var(--dorado);">'+(it.moTotal?'$'+it.moTotal.toLocaleString('es-AR'):'')+'</div>'
+    /* Fila top: nombre + estado */
+    html+='<div class="ct-row-top">';
+    html+='<div><div class="ct-nombre">'+(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'')+'</div>'
+      +'<div class="ct-sub">DNI: '+(f[COL.DNI]||f[COL.TARJETA]||'')+' | '+(f[COL.CATEGORIA_APP]||'Sin cat.')+'</div></div>';
+    html+='<span class="cuota-pill '+cl+'">'+lb+'</span>';
+    html+='</div>';
+    /* Fila mid: plan + monto pagado + vigente hasta */
+    html+='<div class="ct-row-mid">';
+    html+='<div style="flex:1;">'
+      +'<div style="font-size:11px;color:var(--muted);">'+_planDesc+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:var(--dorado);">'+_montoExp+'</div>'
       +'</div>';
-    html+='<div style="font-size:13px;font-weight:700;">'+(it.pagado?'$'+it.pagado.toLocaleString('es-AR'):'-')+'</div>';
-    html+='<div style="font-size:12px;color:var(--muted);">'+(it.hastaStr?formatDate(it.hastaStr):it.hasta?formatDate(it.hasta):'-')+'</div>';
-    html+='<div><button class="btn btn-save" style="padding:6px 10px;font-size:11px;" data-idx="'+idx+'" data-action="cobrar">COBRAR</button></div>';
+    html+='<div style="text-align:right;">'
+      +'<div style="font-size:10px;color:var(--muted);text-transform:uppercase;">Pagado</div>'
+      +'<div style="font-size:13px;font-weight:700;">'+_montoPag+'</div>'
+      +'</div>';
+    html+='<div style="text-align:right;">'
+      +'<div style="font-size:10px;color:var(--muted);text-transform:uppercase;">Hasta</div>'
+      +'<div style="font-size:12px;color:var(--muted);">'+_vigente+'</div>'
+      +'</div>';
+    html+='</div>';
+    /* Fila bot: botón cobrar */
+    html+='<div class="ct-row-bot">';
+    html+='<button class="btn btn-save" style="padding:6px 14px;font-size:11px;" data-idx="'+idx+'" data-action="cobrar">COBRAR</button>';
+    html+='</div>';
     html+='</div>';
   });
   lista.innerHTML=html;
@@ -1521,7 +1547,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.3</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.4</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
