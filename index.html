@@ -981,6 +981,18 @@ function confirmarPago(){
   }
   callScript({action:'registrarPago',pago:p,pass:TOKEN,_noRetry:true},function(){
     CUOTAS_DB.cuotas.push([p.dni,p.nombre,p.plan,p.periodoDesde,p.periodoHasta,p.fechaPago,p.monto,p.metodo,p.cobrador,p.obs,p.hojaOrigen,Date.now()]);
+    // Guardar datos para el comprobante
+    var _fJug=pagoCtx.f;
+    window._ultimoPago={
+      nombre:pagoCtx.nombre, dni:pagoCtx.dni,
+      email:_fJug?(_fJug[COL.EMAIL]||''):'',
+      categoria:_fJug?(_fJug[COL.CATEGORIA_APP]||''):'',
+      planAct:p.plan, moAct:_moAct,
+      plSoc:_plSoc, moSoc:_moSoc, moTotal:_montoTotal,
+      periodo:periodoLabel(document.getElementById('cPeriodo')?document.getElementById('cPeriodo').value:''),
+      vigente:p.periodoHasta, fechaPago:p.fechaPago,
+      cobrador:p.cobrador, metodo:p.metodo
+    };
     _registrarSocial();
   },function(e){alert('Error: '+e);ocultarLoader();});
 }
