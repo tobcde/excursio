@@ -870,15 +870,37 @@ function cerrarModalPago(){document.getElementById('modalPago').classList.remove
 function confirmarPago(){
   if(!pagoCtx)return;
   var desde=document.getElementById('mp-desde').value,hasta=document.getElementById('mp-hasta').value;
+  var _montoTotal=Number(document.getElementById('mp-monto').value)||0;
+  var _metodo=document.getElementById('mp-metodo').value;
+  var _cobrador=document.getElementById('mp-cobrador').value;
+  var _obs=document.getElementById('mp-obs').value;
+  var _fecha=document.getElementById('mp-fecha').value;
+  // Calcular montos: si hay plan social, dividir el total
+  var _plSoc=pagoCtx.plSoc||null;
+  var _moSoc=pagoCtx.moSoc||0;
+  var _moAct=_plSoc?(_montoTotal-_moSoc):_montoTotal;
+  // Pago de actividad
   var p={dni:pagoCtx.dni,nombre:pagoCtx.nombre,plan:pagoCtx.planNom,periodoDesde:desde,periodoHasta:hasta,
-    fechaPago:document.getElementById('mp-fecha').value,monto:document.getElementById('mp-monto').value,
-    metodo:document.getElementById('mp-metodo').value,cobrador:document.getElementById('mp-cobrador').value,
-    obs:document.getElementById('mp-obs').value,hojaOrigen:pagoCtx.hoja};
-  if(!p.fechaPago||!p.monto||!desde||!hasta)return alert('Completa todos los campos');
+    fechaPago:_fecha,monto:_moAct,
+    metodo:_metodo,cobrador:_cobrador,
+    obs:_obs,hojaOrigen:pagoCtx.hoja};
+  if(!p.fechaPago||!_montoTotal||!desde||!hasta)return alert('Completa todos los campos');
   mostrarLoader('Registrando pago...');
-  callScript({action:'registrarPago',pago:p,pass:TOKEN},function(){
+  // Funcion para registrar el pago social (si corresponde)
+  function _registrarSocial(){
+    if(!_plSoc||_moSoc<=0){cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();return;}
+    var pSoc={dni:pagoCtx.dni,nombre:pagoCtx.nombre,plan:_plSoc,periodoDesde:desde,periodoHasta:hasta,
+      fechaPago:_fecha,monto:_moSoc,
+      metodo:_metodo,cobrador:_cobrador,
+      obs:_obs,hojaOrigen:pagoCtx.hoja};
+    callScript({action:'registrarPago',pago:pSoc,pass:TOKEN,_noRetry:true},function(){
+      CUOTAS_DB.cuotas.push([pSoc.dni,pSoc.nombre,pSoc.plan,pSoc.periodoDesde,pSoc.periodoHasta,pSoc.fechaPago,pSoc.monto,pSoc.metodo,pSoc.cobrador,pSoc.obs,pSoc.hojaOrigen,Date.now()]);
+      cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();
+    },function(e){alert('Error al registrar cuota social: '+e);ocultarLoader();});
+  }
+  callScript({action:'registrarPago',pago:p,pass:TOKEN,_noRetry:true},function(){
     CUOTAS_DB.cuotas.push([p.dni,p.nombre,p.plan,p.periodoDesde,p.periodoHasta,p.fechaPago,p.monto,p.metodo,p.cobrador,p.obs,p.hojaOrigen,Date.now()]);
-    cerrarModalPago();ocultarLoader();renderCuotas();renderPlayers();
+    _registrarSocial();
   },function(e){alert('Error: '+e);ocultarLoader();});
 }
 
@@ -1491,7 +1513,7 @@ function cambiarTab(ev,id){
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v2.9</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.0</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
