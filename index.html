@@ -712,7 +712,7 @@ function renderPlayers(){
   var estF=document.getElementById('fEstado').value,cuotaF=document.getElementById('fCuota').value;
   var ligaF=(document.getElementById('fLiga')||{value:''}).value||'';
   var grid=document.getElementById('gridJugadores');
-  var t=0,m=0,fc=0,deu=0,pv=0,html='';
+  var t=0,m=0,fc=0,deu=0,pv=0,html='',_PAG=60,_rendered=0,_skipped=0;
   DB.jugadores.slice(1).forEach(function(f,i){
     var apellido=f[COL.APELLIDO]||'',nombre=f[COL.NOMBRE]||'';
     var nom=apellido+', '+nombre;
@@ -754,6 +754,8 @@ function renderPlayers(){
     var bc=cc!=='transparent'?cc:'var(--verde)';
     // Rango anios de la categoria
     var rango=catObj?' ('+catObj[2]+'-'+catObj[3]+')':'';
+    if(_rendered>=_PAG){_skipped++;return;}
+    _rendered++;
     html+='<div class="card" onclick="abrirM('+(i+1)+')" style="border-left-color:'+bc+'">';
     html+='<div class="cat-badge" style="background:'+bc+'">'+cat+rango+'</div>';
     html+='<h4 class="card-nombre">'+apellido+'<br><span style="font-size:12px;color:var(--muted);">'+nombre+'</span></h4>';
@@ -800,6 +802,7 @@ function renderPlayers(){
     html=_html2+'<div style="grid-column:1/-1;text-align:center;padding:20px;">'
       +'<p style="color:var(--muted);font-size:12px;">Mostrando 60 de '+t+' jugadores. Usa los filtros para encontrar a quien buscas.</p></div>';
   }
+  if(_skipped>0){html+='<div style="grid-column:1/-1;text-align:center;padding:14px;"><p style="color:var(--muted);font-size:12px;">Mostrando '+_PAG+' de '+t+' jugadores. Usa filtros o buscador para acotar.</p></div>';}
   grid.innerHTML=html;
   var _s=function(id,v){var el=document.getElementById(id);if(el)el.innerText=v;};
   _s('statT',t);_s('statM',m);_s('statF',fc);_s('statD',deu);_s('statV',pv);
