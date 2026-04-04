@@ -777,31 +777,6 @@ function renderPlayers(){
       html+='<span style="font-size:13px;font-weight:800;color:'+pc+';">'+st.pct+'%</span></div>';}
     html+='</div>';
   });
-  // Limitar a 60 cards para evitar freeze
-  var _PAG_SIZE=60;
-  var _allCards=[];
-  var _tmp=html;
-  var _re=/<div class="card"[^>]*>[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g;
-  // Enfoque mas simple: partir por jugadores filtrados
-  if(t>_PAG_SIZE){
-    // Reconstruir solo los primeros 60
-    var _cnt=0;
-    var _html2='';
-    var _inCard=false,_depth=0,_cardBuf='';
-    for(var _ci=0;_ci<html.length;_ci++){
-      var _ch=html[_ci];
-      if(!_inCard&&html.slice(_ci,_ci+9)==='<div clas'&&html.slice(_ci,_ci+18)==='<div class="card"'){
-        _inCard=true;_depth=1;_cardBuf='<div class="card"';_ci+=16;continue;
-      }
-      if(_inCard){
-        _cardBuf+=_ch;
-        if(_ch==='<'){if(html[_ci+1]!='/')_depth++;else _depth--;}
-        if(_depth===0){_html2+=_cardBuf;_cardBuf='';_inCard=false;_cnt++;if(_cnt>=_PAG_SIZE)break;}
-      }
-    }
-    html=_html2+'<div style="grid-column:1/-1;text-align:center;padding:20px;">'
-      +'<p style="color:var(--muted);font-size:12px;">Mostrando 60 de '+t+' jugadores. Usa los filtros para encontrar a quien buscas.</p></div>';
-  }
   if(_skipped>0){html+='<div style="grid-column:1/-1;text-align:center;padding:14px;"><p style="color:var(--muted);font-size:12px;">Mostrando '+_PAG+' de '+t+' jugadores. Usa filtros o buscador para acotar.</p></div>';}
   grid.innerHTML=html;
   var _s=function(id,v){var el=document.getElementById(id);if(el)el.innerText=v;};
