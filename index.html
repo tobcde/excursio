@@ -804,7 +804,7 @@ function renderCuotas(){
     var moTotal=mo+moSoc;
     var cv=estadoCuotaV2(f),est=cv.estado;
     var pagos=CUOTAS_DB.cuotas.filter(function(c){return c[0]==dni;});
-    // Sumar todos los pagos vigentes del periodo (actividad + social)
+    // Sumar todos los pagos vigentes del DNI (incluyendo sin plan — para carga inicial)
     var hoy2=new Date();hoy2.setHours(0,0,0,0);
     var pagosVigentes=pagos.filter(function(c){var h=parseDate(c[4]);return h&&h>=hoy2;});
     var pagado=pagosVigentes.reduce(function(s,c){return s+Number(c[6]||0);},0);
