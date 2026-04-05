@@ -70,7 +70,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
 
 /* ── ASISTENCIAS ── */
 .asist-container{padding:25px;max-width:1000px;margin:0 auto;}
-.asist-selector{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;background:var(--surface2);padding:20px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
+.asist-selector{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:end;background:var(--surface2);padding:14px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
 .asist-lista{background:var(--surface2);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
 .asist-lista-header{background:var(--surface);padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
 .asist-lista-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;color:var(--dorado);}
@@ -209,7 +209,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   /* col 6 Cobrar: row 3 col 2 */
   .ct-row>div:nth-child(6){grid-column:2;grid-row:3;}
   .modal-grid{grid-template-columns:1fr;}
-  .asist-selector{grid-template-columns:1fr 1fr;}
+  .asist-selector{grid-template-columns:1fr 1fr;}.asist-selector .btn{width:100%;grid-column:1/-1;}
 }
 
 /* ── REPORTES ─────────────────────────────────────── */
