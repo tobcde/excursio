@@ -595,6 +595,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -1622,7 +1623,7 @@ function cambiarTab(ev,id){
   if(id==='reportes'){iniciarReportes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.0</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.1</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
@@ -1907,15 +1908,26 @@ function rptTipoPago() {
   window._rptData = {headers:['Plan','Cantidad','Total','% del total'],
     rows:Object.keys(porPlan).map(function(pl){var d=porPlan[pl];return[pl,d.count,d.total,total>0?Math.round(d.total/total*100):0];})};
   setTablaRows(rows);
+  var planes=Object.keys(porPlan).sort();
+  renderGrafico('doughnut', planes, [
+    {data:planes.map(function(pl){return porPlan[pl].total;})}
+  ], 'Distribucion por plan');
 }
 
 // ── Reporte 5: Asistencia por jugador ─────────────────────────────
 function rptAsistencia() {
+  var catF = document.getElementById('rCat').value;
+  var rango = getRangoFechas();
   var resumen = {};
   asistencias.forEach(function(r){
+    if (!enRango(r[0], rango.desde, rango.hasta)) return;
     var dni = r[3]||'';
     var nombre = r[4]||'';
     if (!dni) return;
+    if (catF) {
+      var jug = DB.jugadores.slice(1).find(function(f){return (f[COL.DNI]||'').toString()===dni.toString();});
+      if (!jug || (jug[COL.CATEGORIA_APP]||'') !== catF) return;
+    }
     if (!resumen[dni]) resumen[dni]={nombre:nombre,total:0,presentes:0};
     resumen[dni].total++;
     if (r[5]==='Si'||r[5]===true||r[5]==='true') resumen[dni].presentes++;
@@ -1940,12 +1952,19 @@ function rptAsistencia() {
   window._rptData={headers:['Socio','DNI','Clases totales','Presentes','Ausentes','% Asistencia'],
     rows:lista.map(function(d){return[d.nombre,d.dni,d.total,d.presentes,d.total-d.presentes,d.pct+'%'];})};
   setTablaRows(rows);
+  var top10=lista.slice(0,10);
+  renderGrafico('bar',
+    top10.map(function(d){return d.nombre.split(' ')[0]||d.nombre;}),
+    [{label:'% Asistencia', data:top10.map(function(d){return d.pct;})}],
+    'Top 10 asistencia (%)');
 }
 
 // ── Reporte 6: Ranking asistencia ─────────────────────────────────
 function rptRankingAsist() {
+  var rango = getRangoFechas();
   var resumen = {};
   asistencias.forEach(function(r){
+    if (!enRango(r[0], rango.desde, rango.hasta)) return;
     var dni=r[3]||''; if(!dni)return;
     if(!resumen[dni])resumen[dni]={nombre:r[4]||'',presentes:0,total:0};
     resumen[dni].total++;
@@ -1968,6 +1987,10 @@ function rptRankingAsist() {
   window._rptData={headers:['#','Socio','DNI','Presentes','% Asistencia'],
     rows:lista.map(function(d,i){return[i+1,d.nombre,d.dni,d.presentes,d.pct+'%'];})};
   setTablaRows(rows);
+  renderGrafico('bar',
+    lista.map(function(d){return d.nombre.split(' ')[0]||d.nombre;}),
+    [{label:'Presentes', data:lista.map(function(d){return d.presentes;})}],
+    'Ranking asistencia (top 20)');
 }
 
 // ── Reporte 7: Plantel completo ───────────────────────────────────
@@ -1997,6 +2020,10 @@ function rptJugadores() {
   window._rptData={headers:['Socio','DNI','Nac.','Categoria','Plan','Liga','Socio club','Estado cuota'],
     rows:jug.map(function(f){var cv=estadoCuotaV2(f);return[(f[COL.APELLIDO]||'')+' '+(f[COL.NOMBRE]||''),f[COL.DNI]||'',f[COL.FECHA_NAC]||'',f[COL.CATEGORIA_APP]||'',f[COL.PLAN]||'',f[COL.LIGA]||'',f[COL.SOCIO_CLUB]||'No',cv.estado];})};
   setTablaRows(rows);
+  var porCatJ={};
+  jug.forEach(function(f){var c=f[COL.CATEGORIA_APP]||'Sin cat.';porCatJ[c]=(porCatJ[c]||0)+1;});
+  var catsJ=Object.keys(porCatJ).sort();
+  renderGrafico('doughnut', catsJ, [{data:catsJ.map(function(c){return porCatJ[c];})}], 'Jugadores por categoria');
 }
 
 // ── Exportar CSV ──────────────────────────────────────────────────
