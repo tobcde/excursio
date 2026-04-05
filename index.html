@@ -1737,11 +1737,12 @@ function renderReporte() {
   var showRango = ['asistencia','ranking_asist'].indexOf(tipo) >= 0;
   var showTipo  = tipo === 'tipo_pago';
   var showCat   = ['deudores','al_dia','jugadores','asistencia'].indexOf(tipo) >= 0;
-  document.getElementById('r-filter-mes').style.display   = showMes   ? '' : 'none';
-  document.getElementById('r-filter-desde').style.display      = showRango      ? '' : 'none';
-  document.getElementById('r-filter-hasta').style.display      = showRango      ? '' : 'none';
-  document.getElementById('r-filter-caja-fecha').style.display = showCajaFecha  ? '' : 'none';
-  document.getElementById('r-filter-tipo').style.display  = showTipo  ? '' : 'none';
+  function _sd(id,v){var e=document.getElementById(id);if(e)e.style.display=v;}
+  _sd('r-filter-mes',        showMes        ? '' : 'none');
+  _sd('r-filter-desde',      showRango      ? '' : 'none');
+  _sd('r-filter-hasta',      showRango      ? '' : 'none');
+  _sd('r-filter-caja-fecha', showCajaFecha  ? '' : 'none');
+  _sd('r-filter-tipo',       showTipo       ? '' : 'none');
   document.getElementById('r-filter-cat').style.display   = showCat   ? '' : 'none';
 
   switch(tipo) {
@@ -2354,6 +2355,10 @@ function olvidarHuella() {
       <div class="filter-group" id="r-filter-hasta" style="display:none;">
         <label class="filter-label">Hasta</label>
         <input type="date" id="rHasta" class="edit-input" style="height:36px;padding:0 10px;font-size:12px;" onchange="renderReporte()">
+      </div>
+      <div class="filter-group" id="r-filter-caja-fecha" style="display:none;">
+        <label class="filter-label">Fecha</label>
+        <input type="date" id="rCajaFecha" class="edit-input" style="height:36px;padding:0 10px;font-size:12px;" onchange="renderReporte()">
       </div>
       <div class="filter-group" id="r-filter-tipo">
         <label class="filter-label">Tipo de plan</label>
