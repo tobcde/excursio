@@ -1912,7 +1912,7 @@ function rptTipoPago() {
 // ── Reporte 5: Asistencia por jugador ─────────────────────────────
 function rptAsistencia() {
   var resumen = {};
-  ASIST_DB.forEach(function(r){
+  asistencias.forEach(function(r){
     var dni = r[3]||'';
     var nombre = r[4]||'';
     if (!dni) return;
@@ -1945,7 +1945,7 @@ function rptAsistencia() {
 // ── Reporte 6: Ranking asistencia ─────────────────────────────────
 function rptRankingAsist() {
   var resumen = {};
-  ASIST_DB.forEach(function(r){
+  asistencias.forEach(function(r){
     var dni=r[3]||''; if(!dni)return;
     if(!resumen[dni])resumen[dni]={nombre:r[4]||'',presentes:0,total:0};
     resumen[dni].total++;
@@ -2143,7 +2143,7 @@ function olvidarHuella() {
 </html>
 
 <!-- ══ REPORTES ══════════════════════════════════════════════ -->
-<div id="sec-reportes" style="display:none;">
+<div id="tab-reportes" style="display:none;">
   <div class="section-box">
 
     <!-- Filtros globales -->
