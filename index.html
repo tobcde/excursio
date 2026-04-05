@@ -2312,7 +2312,7 @@ function guardarNuevoSocio() {
   if(!apellido)return _err('El apellido es obligatorio');
   if(!nombre)return _err('El nombre es obligatorio');
   if(!dni||isNaN(Number(dni))||dni.length<6)return _err('DNI invalido');
-  var dup=DB.jugadores.slice(1).find(function(f){return(f[COL.DNI]||'').toString()===dni;});
+  var dup=DB.jugadores.slice(1).find(function(f){return f&&(f[COL.DNI]||f[COL.TARJETA]||'').toString()===dni;});
   if(dup)return _err('Ya existe un socio con DNI '+dni+' ('+dup[COL.APELLIDO]+', '+dup[COL.NOMBRE]+')');
   errEl.style.display='none';
   var jug={
