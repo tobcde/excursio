@@ -1720,18 +1720,26 @@ function iniciarReportes() {
       selCat.innerHTML += '<option value="'+c[0]+'">'+c[0]+'</option>';
     });
   }
+  var _hoy=new Date();
+  var _d=document.getElementById('rDesde');
+  var _h=document.getElementById('rHasta');
+  if(_d&&!_d.value)_d.value=_hoy.getFullYear()+'-'+String(_hoy.getMonth()+1).padStart(2,'0')+'-01';
+  if(_h&&!_h.value)_h.value=_hoy.toISOString().split('T')[0];
   renderReporte();
 }
 
 function renderReporte() {
   var tipo = document.getElementById('rTipo').value;
   // Mostrar/ocultar filtros según tipo
-  var showMes  = ['pagos_mes','tipo_pago'].indexOf(tipo) >= 0;
-  var showTipo = tipo === 'tipo_pago';
-  var showCat  = ['deudores','al_dia','jugadores'].indexOf(tipo) >= 0;
-  document.getElementById('r-filter-mes').style.display  = showMes  ? '' : 'none';
-  document.getElementById('r-filter-tipo').style.display = showTipo ? '' : 'none';
-  document.getElementById('r-filter-cat').style.display  = showCat  ? '' : 'none';
+  var showMes   = ['pagos_mes','tipo_pago'].indexOf(tipo) >= 0;
+  var showRango = ['asistencia','ranking_asist'].indexOf(tipo) >= 0;
+  var showTipo  = tipo === 'tipo_pago';
+  var showCat   = ['deudores','al_dia','jugadores','asistencia'].indexOf(tipo) >= 0;
+  document.getElementById('r-filter-mes').style.display   = showMes   ? '' : 'none';
+  document.getElementById('r-filter-desde').style.display = showRango ? '' : 'none';
+  document.getElementById('r-filter-hasta').style.display = showRango ? '' : 'none';
+  document.getElementById('r-filter-tipo').style.display  = showTipo  ? '' : 'none';
+  document.getElementById('r-filter-cat').style.display   = showCat   ? '' : 'none';
 
   switch(tipo) {
     case 'pagos_mes':    rptPagosMes();    break;
@@ -1803,6 +1811,20 @@ function rptPagosMes() {
   });
   window._rptData = {headers:['Fecha','Socio','DNI','Plan','Monto','Metodo','Cobrador'], rows:pagos.map(function(c){return[c[5],c[1],c[0],c[2],c[6],c[7],c[8]];})};
   setTablaRows(rows);
+  var porDia={};
+  pagos.forEach(function(c){
+    var dia=(c[5]||'').substring(8,10)||'?';
+    if(!porDia[dia])porDia[dia]={act:0,soc:0};
+    if((c[2]||'').toUpperCase().includes('SOCIAL'))porDia[dia].soc+=Number(c[6]||0);
+    else porDia[dia].act+=Number(c[6]||0);
+  });
+  var dias=Object.keys(porDia).sort();
+  renderGrafico('bar',dias.map(function(d){return 'Dia '+d;}),
+    [{label:'Actividad',data:dias.map(function(d){return porDia[d].act;})},
+     {label:'Social',data:dias.map(function(d){return porDia[d].soc;})}],
+    'Recaudacion por dia');
+  var _pd={};pagos.forEach(function(c){var _d=(c[5]||'').substring(8,10)||'?';if(!_pd[_d])_pd[_d]={a:0,s:0};if((c[2]||'').toUpperCase().includes('SOCIAL'))_pd[_d].s+=Number(c[6]||0);else _pd[_d].a+=Number(c[6]||0);});
+  var _ds=Object.keys(_pd).sort();renderGrafico('bar',_ds.map(function(d){return 'Dia '+d;}),[{label:'Actividad',data:_ds.map(function(d){return _pd[d].a;})},{label:'Social',data:_ds.map(function(d){return _pd[d].s;})}],'Recaudacion por dia');
 }
 
 // ── Reporte 2: Deudores ───────────────────────────────────────────
@@ -1839,6 +1861,21 @@ function rptDeudores() {
   window._rptData = {headers:['Socio','DNI','Categoria','Estado','Deuda actividad','Deuda social','Total debe'],
     rows:deudores.map(function(f){var cv=estadoCuotaV2(f);return[(f[COL.APELLIDO]||'')+' '+(f[COL.NOMBRE]||''),f[COL.DNI]||'',f[COL.CATEGORIA_APP]||'',cv.estado,cv.deudaActividad||0,cv.deudaSocial||0,cv.deuda||0];})};
   setTablaRows(rows);
+  var porCat={};
+  activos.forEach(function(f){
+    var cat=f[COL.CATEGORIA_APP]||'Sin cat.';
+    if(!porCat[cat])porCat[cat]={debe:0,ok:0};
+    var cv=estadoCuotaV2(f);
+    if(cv.estado==='debe'||cv.estado==='parcial')porCat[cat].debe++;
+    else porCat[cat].ok++;
+  });
+  var cats=Object.keys(porCat).sort();
+  renderGrafico('bar',cats,
+    [{label:'Deben',data:cats.map(function(c){return porCat[c].debe;})},
+     {label:'Al dia',data:cats.map(function(c){return porCat[c].ok;})}],
+    'Estado de cuotas por categoria');
+  var _pc={};activos.forEach(function(f){var _c=f[COL.CATEGORIA_APP]||'Sin cat.';if(!_pc[_c])_pc[_c]={d:0,o:0};var _cv=estadoCuotaV2(f);if(_cv.estado==='debe'||_cv.estado==='parcial')_pc[_c].d++;else _pc[_c].o++;});
+  var _cs=Object.keys(_pc).sort();renderGrafico('bar',_cs,[{label:'Deben',data:_cs.map(function(c){return _pc[c].d;})},{label:'Al dia',data:_cs.map(function(c){return _pc[c].o;})}],'Estado por categoria');
 }
 
 // ── Reporte 3: Al dia ─────────────────────────────────────────────
@@ -1912,6 +1949,7 @@ function rptTipoPago() {
   renderGrafico('doughnut', planes, [
     {data:planes.map(function(pl){return porPlan[pl].total;})}
   ], 'Distribucion por plan');
+  var _pls=Object.keys(porPlan).sort();renderGrafico('doughnut',_pls,[{data:_pls.map(function(p){return porPlan[p].total;})}],'Distribucion por plan');
 }
 
 // ── Reporte 5: Asistencia por jugador ─────────────────────────────
@@ -1957,6 +1995,7 @@ function rptAsistencia() {
     top10.map(function(d){return d.nombre.split(' ')[0]||d.nombre;}),
     [{label:'% Asistencia', data:top10.map(function(d){return d.pct;})}],
     'Top 10 asistencia (%)');
+  var _t10=lista.slice(0,10);renderGrafico('bar',_t10.map(function(d){return d.nombre.split(',')[0]||d.nombre;}),[{label:'% Asist.',data:_t10.map(function(d){return d.pct;})}],'Top 10 asistencia (%)');
 }
 
 // ── Reporte 6: Ranking asistencia ─────────────────────────────────
@@ -1991,6 +2030,7 @@ function rptRankingAsist() {
     lista.map(function(d){return d.nombre.split(' ')[0]||d.nombre;}),
     [{label:'Presentes', data:lista.map(function(d){return d.presentes;})}],
     'Ranking asistencia (top 20)');
+  renderGrafico('bar',lista.map(function(d){return d.nombre.split(',')[0]||d.nombre;}),[{label:'Presentes',data:lista.map(function(d){return d.presentes;})}],'Ranking asistencia (top 20)');
 }
 
 // ── Reporte 7: Plantel completo ───────────────────────────────────
@@ -2024,9 +2064,51 @@ function rptJugadores() {
   jug.forEach(function(f){var c=f[COL.CATEGORIA_APP]||'Sin cat.';porCatJ[c]=(porCatJ[c]||0)+1;});
   var catsJ=Object.keys(porCatJ).sort();
   renderGrafico('doughnut', catsJ, [{data:catsJ.map(function(c){return porCatJ[c];})}], 'Jugadores por categoria');
+  var _pcj={};jug.forEach(function(f){var _c=f[COL.CATEGORIA_APP]||'Sin cat.';_pcj[_c]=(_pcj[_c]||0)+1;});var _cj=Object.keys(_pcj).sort();renderGrafico('doughnut',_cj,[{data:_cj.map(function(c){return _pcj[c];})}],'Jugadores por categoria');
 }
 
 // ── Exportar CSV ──────────────────────────────────────────────────
+var _rptChart=null;
+function renderGrafico(tipo,labels,datasets,titulo){
+  var wrap=document.getElementById('r-grafico-wrap');
+  var canvas=document.getElementById('rChart');
+  if(!labels||!labels.length){wrap.style.display='none';return;}
+  wrap.style.display='';
+  if(_rptChart){_rptChart.destroy();_rptChart=null;}
+  var ctx=canvas.getContext('2d');
+  var col=['#1a7a3c','#c9a227','#7ab8e8','#e06060','#9b8fe8','#6de097','#f0a060','#60c0d0'];
+  var isDo=tipo==='doughnut';
+  _rptChart=new Chart(ctx,{
+    type:tipo,
+    data:{labels:labels,datasets:datasets.map(function(ds,i){
+      return{label:ds.label||'',data:ds.data,
+        backgroundColor:isDo?labels.map(function(_,j){return col[j%col.length]+'cc';}):col[i%col.length]+'cc',
+        borderColor:isDo?labels.map(function(_,j){return col[j%col.length];}):col[i%col.length],
+        borderWidth:2,borderRadius:isDo?0:4};
+    })},
+    options:{responsive:true,plugins:{
+      legend:{labels:{color:'#ccc',font:{family:'Barlow Condensed'}}},
+      title:titulo?{display:true,text:titulo,color:'#c9a227',font:{size:13,family:'Barlow Condensed'}}:{display:false}
+    },scales:isDo?{}:{
+      x:{ticks:{color:'#999'},grid:{color:'#2a2a2a'}},
+      y:{ticks:{color:'#999'},grid:{color:'#2a2a2a'},beginAtZero:true}
+    }}
+  });
+}
+
+function getRangoFechas(){
+  return{desde:(document.getElementById('rDesde')||{}).value||'',
+         hasta:(document.getElementById('rHasta')||{}).value||''};
+}
+
+function enRango(f,desde,hasta){
+  if(!f)return false;
+  var d=f.substring(0,10);
+  if(desde&&d<desde)return false;
+  if(hasta&&d>hasta)return false;
+  return true;
+}
+
 function exportarReporteCSV() {
   if (!window._rptData) return;
   var lines = [window._rptData.headers.join(',')];
@@ -2191,6 +2273,14 @@ function olvidarHuella() {
         <label class="filter-label">Mes</label>
         <select id="rMes" class="filter-select" onchange="renderReporte()"></select>
       </div>
+      <div class="filter-group" id="r-filter-desde" style="display:none;">
+        <label class="filter-label">Desde</label>
+        <input type="date" id="rDesde" class="edit-input" style="height:36px;padding:0 10px;font-size:12px;" onchange="renderReporte()">
+      </div>
+      <div class="filter-group" id="r-filter-hasta" style="display:none;">
+        <label class="filter-label">Hasta</label>
+        <input type="date" id="rHasta" class="edit-input" style="height:36px;padding:0 10px;font-size:12px;" onchange="renderReporte()">
+      </div>
       <div class="filter-group" id="r-filter-tipo">
         <label class="filter-label">Tipo de plan</label>
         <select id="rTipoPlan" class="filter-select" onchange="renderReporte()">
@@ -2212,6 +2302,9 @@ function olvidarHuella() {
 
     <!-- Resumen tarjetas -->
     <div id="r-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+    <!-- Grafico -->
+    <div id="r-grafico-wrap" style="margin-bottom:24px;display:none;"><canvas id="rChart" height="100"></canvas></div>
 
     <!-- Tabla -->
     <div id="r-tabla-wrap" style="overflow-x:auto;">
