@@ -1733,17 +1733,18 @@ function iniciarReportes() {
 function renderReporte() {
   var tipo = document.getElementById('rTipo').value;
   // Mostrar/ocultar filtros según tipo
-  var showMes   = ['pagos_mes','tipo_pago'].indexOf(tipo) >= 0;
-  var showRango = ['asistencia','ranking_asist'].indexOf(tipo) >= 0;
-  var showTipo  = tipo === 'tipo_pago';
-  var showCat   = ['deudores','al_dia','jugadores','asistencia'].indexOf(tipo) >= 0;
+  var showMes        = ['pagos_mes','tipo_pago'].indexOf(tipo) >= 0;
+  var showRango      = ['asistencia','ranking_asist'].indexOf(tipo) >= 0;
+  var showCajaFecha  = tipo === 'caja_dia';
+  var showTipo       = tipo === 'tipo_pago';
+  var showCat        = ['deudores','al_dia','jugadores','asistencia'].indexOf(tipo) >= 0;
   function _sd(id,v){var e=document.getElementById(id);if(e)e.style.display=v;}
   _sd('r-filter-mes',        showMes        ? '' : 'none');
   _sd('r-filter-desde',      showRango      ? '' : 'none');
   _sd('r-filter-hasta',      showRango      ? '' : 'none');
   _sd('r-filter-caja-fecha', showCajaFecha  ? '' : 'none');
   _sd('r-filter-tipo',       showTipo       ? '' : 'none');
-  document.getElementById('r-filter-cat').style.display   = showCat   ? '' : 'none';
+  _sd('r-filter-cat', showCat ? '' : 'none');
 
   switch(tipo) {
     case 'pagos_mes':    rptPagosMes();    break;
