@@ -2009,8 +2009,7 @@ function exportarReporteCSV() {
       return s.includes(',')||s.includes('"')?'"'+s+'"':s;
     }).join(','));
   });
-  var blob = new Blob(['﻿'+lines.join('
-')],{type:'text/csv;charset=utf-8;'});
+  var blob = new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href=url; a.download='reporte_excursionistas.csv'; a.click();
