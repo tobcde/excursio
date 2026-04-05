@@ -204,6 +204,18 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   .modal-grid{grid-template-columns:1fr;}
   .asist-selector{grid-template-columns:1fr 1fr;}
 }
+
+/* ── REPORTES ─────────────────────────────────────── */
+#r-tabla th{padding:8px 12px;text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;}
+#r-tabla td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;}
+#r-tabla tr:hover td{background:var(--surface);}
+#r-tabla td.num{text-align:right;font-weight:700;}
+#r-tabla td.ok{color:#6de097;}
+#r-tabla td.debe{color:var(--red);}
+#r-tabla td.muted{color:var(--muted);}
+.r-card{background:var(--surface);border-radius:10px;padding:14px 16px;text-align:center;border:1px solid var(--border);}
+.r-card-val{font-size:22px;font-weight:800;font-family:'Barlow Condensed',sans-serif;}
+.r-card-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
 </style>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1a7a3c">
@@ -253,6 +265,7 @@ header{background:var(--surface);border-bottom:2px solid var(--verde);padding:14
   <div class="tab" onclick="cambiarTab(event,'asistencias')">ASISTENCIAS</div>
   <div class="tab" onclick="cambiarTab(event,'cuotas')">CUOTAS</div>
   <div class="tab" onclick="cambiarTab(event,'admin')">ADMINISTRACION</div>
+  <div class="tab" onclick="cambiarTab(event,'reportes')">REPORTES</div>
 </div>
 
 <!-- ══ TAB SOCIOS ══════════════════════════════════════ -->
@@ -1606,9 +1619,10 @@ function cambiarTab(ev,id){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
   ev.target.classList.add('active');
   if(id==='cuotas'){renderCuotas();renderListPlanes();}
+  if(id==='reportes'){iniciarReportes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v3.8</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.0</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
@@ -1684,6 +1698,325 @@ window.addEventListener('load', function() {
 });
 
 // Registrar huella después del primer login exitoso
+// ══ REPORTES ════════════════════════════════════════════════════
+
+function iniciarReportes() {
+  // Poblar select de meses
+  var sel = document.getElementById('rMes');
+  if (!sel) return;
+  sel.innerHTML = '';
+  var hoy = new Date();
+  for (var i = 0; i < 12; i++) {
+    var d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    var val = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    var lbl = d.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    sel.innerHTML += '<option value="'+val+'">'+lbl.charAt(0).toUpperCase()+lbl.slice(1)+'</option>';
+  }
+  // Poblar categorías
+  var selCat = document.getElementById('rCat');
+  if (selCat && DB.categorias) {
+    DB.categorias.forEach(function(c){
+      selCat.innerHTML += '<option value="'+c[0]+'">'+c[0]+'</option>';
+    });
+  }
+  renderReporte();
+}
+
+function renderReporte() {
+  var tipo = document.getElementById('rTipo').value;
+  // Mostrar/ocultar filtros según tipo
+  var showMes  = ['pagos_mes','tipo_pago'].indexOf(tipo) >= 0;
+  var showTipo = tipo === 'tipo_pago';
+  var showCat  = ['deudores','al_dia','jugadores'].indexOf(tipo) >= 0;
+  document.getElementById('r-filter-mes').style.display  = showMes  ? '' : 'none';
+  document.getElementById('r-filter-tipo').style.display = showTipo ? '' : 'none';
+  document.getElementById('r-filter-cat').style.display  = showCat  ? '' : 'none';
+
+  switch(tipo) {
+    case 'pagos_mes':    rptPagosMes();    break;
+    case 'deudores':     rptDeudores();    break;
+    case 'al_dia':       rptAlDia();       break;
+    case 'tipo_pago':    rptTipoPago();    break;
+    case 'asistencia':   rptAsistencia();  break;
+    case 'ranking_asist':rptRankingAsist();break;
+    case 'jugadores':    rptJugadores();   break;
+  }
+}
+
+function setTablaHeaders(cols) {
+  var thead = document.getElementById('r-thead');
+  thead.innerHTML = '<tr>'+cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr>';
+}
+
+function setTablaRows(rows) {
+  var tbody = document.getElementById('r-tbody');
+  var empty = document.getElementById('r-empty');
+  if (!rows.length) {
+    tbody.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = rows.join('');
+}
+
+function setCards(cards) {
+  var el = document.getElementById('r-cards');
+  el.innerHTML = cards.map(function(c){
+    return '<div class="r-card"><div class="r-card-val" style="color:'+c.color+';">'+c.val+'</div><div class="r-card-lbl">'+c.lbl+'</div></div>';
+  }).join('');
+}
+
+function getMesSeleccionado() {
+  var val = document.getElementById('rMes').value; // "2026-04"
+  return val;
+}
+
+function td(txt, cls) { return '<td'+(cls?' class="'+cls+'"':'')+'>'+txt+'</td>'; }
+
+// ── Reporte 1: Pagos del mes ──────────────────────────────────────
+function rptPagosMes() {
+  var mes = getMesSeleccionado(); // "2026-04"
+  var pagos = CUOTAS_DB.cuotas.filter(function(c){
+    return (c[5]||'').substring(0,7) === mes;
+  });
+  var total = pagos.reduce(function(s,c){return s+Number(c[6]||0);},0);
+  var actividad = pagos.filter(function(c){return !(c[2]||'').toString().toUpperCase().includes('SOCIAL');});
+  var social = pagos.filter(function(c){return (c[2]||'').toString().toUpperCase().includes('SOCIAL');});
+  var totalAct = actividad.reduce(function(s,c){return s+Number(c[6]||0);},0);
+  var totalSoc = social.reduce(function(s,c){return s+Number(c[6]||0);},0);
+
+  setCards([
+    {val:pagos.length, lbl:'Pagos', color:'var(--verde)'},
+    {val:'$'+total.toLocaleString('es-AR'), lbl:'Total recaudado', color:'var(--dorado)'},
+    {val:'$'+totalAct.toLocaleString('es-AR'), lbl:'Actividad', color:'#6de097'},
+    {val:'$'+totalSoc.toLocaleString('es-AR'), lbl:'Social', color:'#7ab8e8'}
+  ]);
+  setTablaHeaders(['Fecha','Socio','DNI','Plan','Monto','Metodo','Cobrador']);
+  var rows = pagos.map(function(c){
+    return '<tr>'+
+      td(c[5]||'-')+td((c[1]||'-').toString().toUpperCase())+td(c[0]||'-')+
+      td(c[2]||'-')+td('$'+Number(c[6]||0).toLocaleString('es-AR'),'num')+
+      td(c[7]||'-')+td(c[8]||'-')+
+      '</tr>';
+  });
+  window._rptData = {headers:['Fecha','Socio','DNI','Plan','Monto','Metodo','Cobrador'], rows:pagos.map(function(c){return[c[5],c[1],c[0],c[2],c[6],c[7],c[8]];})};
+  setTablaRows(rows);
+}
+
+// ── Reporte 2: Deudores ───────────────────────────────────────────
+function rptDeudores() {
+  var catF = document.getElementById('rCat').value;
+  var activos = DB.jugadores.slice(1).filter(function(f){
+    var a=f[COL.ACTIVO]; return a===true||String(a).toLowerCase()==='si';
+  });
+  if (catF) activos = activos.filter(function(f){return f[COL.CATEGORIA_APP]===catF;});
+  var deudores = activos.filter(function(f){
+    var cv = estadoCuotaV2(f);
+    return cv.estado==='debe'||cv.estado==='parcial';
+  });
+  var totalDeuda = deudores.reduce(function(s,f){return s+(estadoCuotaV2(f).deuda||0);},0);
+
+  setCards([
+    {val:deudores.length, lbl:'Deudores', color:'var(--red)'},
+    {val:'$'+totalDeuda.toLocaleString('es-AR'), lbl:'Deuda total', color:'var(--dorado)'},
+    {val:activos.length-deudores.length, lbl:'Al dia', color:'#6de097'}
+  ]);
+  setTablaHeaders(['Socio','DNI','Categoria','Estado','Deuda actividad','Deuda social','Total debe']);
+  var rows = deudores.map(function(f){
+    var cv=estadoCuotaV2(f);
+    var nom=(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'');
+    var est=cv.estado==='debe'?'DEBE':'PARCIAL';
+    return '<tr>'+
+      td(nom.toUpperCase())+td(f[COL.DNI]||'-')+td(f[COL.CATEGORIA_APP]||'-')+
+      td('<span class="cuota-pill cuota-debe" style="font-size:10px;">'+est+'</span>')+
+      td('$'+(cv.deudaActividad||0).toLocaleString('es-AR'),'num')+
+      td('$'+(cv.deudaSocial||0).toLocaleString('es-AR'),'num')+
+      td('$'+(cv.deuda||0).toLocaleString('es-AR'),'num debe')+
+      '</tr>';
+  });
+  window._rptData = {headers:['Socio','DNI','Categoria','Estado','Deuda actividad','Deuda social','Total debe'],
+    rows:deudores.map(function(f){var cv=estadoCuotaV2(f);return[(f[COL.APELLIDO]||'')+' '+(f[COL.NOMBRE]||''),f[COL.DNI]||'',f[COL.CATEGORIA_APP]||'',cv.estado,cv.deudaActividad||0,cv.deudaSocial||0,cv.deuda||0];})};
+  setTablaRows(rows);
+}
+
+// ── Reporte 3: Al dia ─────────────────────────────────────────────
+function rptAlDia() {
+  var catF = document.getElementById('rCat').value;
+  var activos = DB.jugadores.slice(1).filter(function(f){
+    var a=f[COL.ACTIVO]; return a===true||String(a).toLowerCase()==='si';
+  });
+  if (catF) activos = activos.filter(function(f){return f[COL.CATEGORIA_APP]===catF;});
+  var alDia = activos.filter(function(f){
+    var cv=estadoCuotaV2(f); return cv.estado==='ok'||cv.estado==='vence';
+  });
+
+  setCards([
+    {val:alDia.length, lbl:'Al dia', color:'#6de097'},
+    {val:activos.length-alDia.length, lbl:'Deben', color:'var(--red)'},
+    {val:Math.round(alDia.length/activos.length*100)+'%', lbl:'Cumplimiento', color:'var(--dorado)'}
+  ]);
+  setTablaHeaders(['Socio','DNI','Categoria','Plan','Vigente hasta']);
+  var rows = alDia.map(function(f){
+    var cv=estadoCuotaV2(f);
+    var nom=(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'');
+    return '<tr>'+
+      td(nom.toUpperCase())+td(f[COL.DNI]||'-')+td(f[COL.CATEGORIA_APP]||'-')+
+      td(f[COL.PLAN]||'-')+
+      td(cv.hasta?formatDate(cv.hasta):'-','ok')+
+      '</tr>';
+  });
+  window._rptData = {headers:['Socio','DNI','Categoria','Plan','Vigente hasta'],
+    rows:alDia.map(function(f){var cv=estadoCuotaV2(f);return[(f[COL.APELLIDO]||'')+' '+(f[COL.NOMBRE]||''),f[COL.DNI]||'',f[COL.CATEGORIA_APP]||'',f[COL.PLAN]||'',cv.hasta?formatDate(cv.hasta):''];})};
+  setTablaRows(rows);
+}
+
+// ── Reporte 4: Por tipo de pago ───────────────────────────────────
+function rptTipoPago() {
+  var mes = getMesSeleccionado();
+  var tipF = document.getElementById('rTipoPlan').value;
+  var pagos = CUOTAS_DB.cuotas.filter(function(c){
+    if ((c[5]||'').substring(0,7) !== mes) return false;
+    if (!tipF) return true;
+    var planUp = (c[2]||'').toString().toUpperCase();
+    if (tipF==='social') return planUp.includes('SOCIAL');
+    if (tipF==='actividad') return !planUp.includes('SOCIAL');
+    return true;
+  });
+  // Agrupar por plan
+  var porPlan = {};
+  pagos.forEach(function(c){
+    var pl = c[2]||'Sin plan';
+    if (!porPlan[pl]) porPlan[pl]={count:0,total:0};
+    porPlan[pl].count++;
+    porPlan[pl].total+=Number(c[6]||0);
+  });
+  var total = pagos.reduce(function(s,c){return s+Number(c[6]||0);},0);
+
+  setCards([
+    {val:pagos.length, lbl:'Pagos', color:'var(--verde)'},
+    {val:'$'+total.toLocaleString('es-AR'), lbl:'Total', color:'var(--dorado)'},
+    {val:Object.keys(porPlan).length, lbl:'Tipos de plan', color:'#7ab8e8'}
+  ]);
+  setTablaHeaders(['Plan','Cantidad','Total recaudado','% del total']);
+  var rows = Object.keys(porPlan).sort().map(function(pl){
+    var d=porPlan[pl];
+    var pct = total>0?Math.round(d.total/total*100):0;
+    return '<tr>'+td(pl)+td(d.count,'num')+td('$'+d.total.toLocaleString('es-AR'),'num')+td(pct+'%','num')+'</tr>';
+  });
+  window._rptData = {headers:['Plan','Cantidad','Total','% del total'],
+    rows:Object.keys(porPlan).map(function(pl){var d=porPlan[pl];return[pl,d.count,d.total,total>0?Math.round(d.total/total*100):0];})};
+  setTablaRows(rows);
+}
+
+// ── Reporte 5: Asistencia por jugador ─────────────────────────────
+function rptAsistencia() {
+  var resumen = {};
+  ASIST_DB.forEach(function(r){
+    var dni = r[3]||'';
+    var nombre = r[4]||'';
+    if (!dni) return;
+    if (!resumen[dni]) resumen[dni]={nombre:nombre,total:0,presentes:0};
+    resumen[dni].total++;
+    if (r[5]==='Si'||r[5]===true||r[5]==='true') resumen[dni].presentes++;
+  });
+  var lista = Object.keys(resumen).map(function(dni){
+    var d=resumen[dni];
+    var pct=d.total>0?Math.round(d.presentes/d.total*100):0;
+    return {dni:dni,nombre:d.nombre,total:d.total,presentes:d.presentes,pct:pct};
+  }).sort(function(a,b){return b.pct-a.pct;});
+
+  setCards([
+    {val:lista.length, lbl:'Jugadores con registro', color:'var(--verde)'},
+    {val:lista.length?Math.round(lista.reduce(function(s,d){return s+d.pct;},0)/lista.length)+'%':'0%', lbl:'Asistencia promedio', color:'var(--dorado)'}
+  ]);
+  setTablaHeaders(['Socio','DNI','Clases totales','Presentes','Ausentes','% Asistencia']);
+  var rows = lista.map(function(d){
+    var cls = d.pct>=75?'ok':d.pct>=50?'':'debe';
+    return '<tr>'+td(d.nombre.toUpperCase())+td(d.dni)+td(d.total,'num')+
+      td(d.presentes,'num')+td(d.total-d.presentes,'num')+
+      td(d.pct+'%','num '+cls)+'</tr>';
+  });
+  window._rptData={headers:['Socio','DNI','Clases totales','Presentes','Ausentes','% Asistencia'],
+    rows:lista.map(function(d){return[d.nombre,d.dni,d.total,d.presentes,d.total-d.presentes,d.pct+'%'];})};
+  setTablaRows(rows);
+}
+
+// ── Reporte 6: Ranking asistencia ─────────────────────────────────
+function rptRankingAsist() {
+  var resumen = {};
+  ASIST_DB.forEach(function(r){
+    var dni=r[3]||''; if(!dni)return;
+    if(!resumen[dni])resumen[dni]={nombre:r[4]||'',presentes:0,total:0};
+    resumen[dni].total++;
+    if(r[5]==='Si'||r[5]===true)resumen[dni].presentes++;
+  });
+  var lista=Object.keys(resumen).map(function(dni){
+    var d=resumen[dni];
+    return{dni:dni,nombre:d.nombre,presentes:d.presentes,total:d.total,
+      pct:d.total>0?Math.round(d.presentes/d.total*100):0};
+  }).sort(function(a,b){return b.presentes-a.presentes;}).slice(0,20);
+
+  setCards([{val:lista.length?lista[0].nombre:'—',lbl:'Top asistencia',color:'var(--dorado)'},
+    {val:lista.length?lista[0].presentes:'0',lbl:'Clases asistidas',color:'#6de097'}]);
+  setTablaHeaders(['#','Socio','DNI','Presentes','% Asistencia']);
+  var rows=lista.map(function(d,i){
+    var cls=i===0?'ok':i<3?'ok':'';
+    return '<tr>'+td(i+1,'num')+td(d.nombre.toUpperCase())+td(d.dni)+
+      td(d.presentes,'num '+cls)+td(d.pct+'%','num')+'</tr>';
+  });
+  window._rptData={headers:['#','Socio','DNI','Presentes','% Asistencia'],
+    rows:lista.map(function(d,i){return[i+1,d.nombre,d.dni,d.presentes,d.pct+'%'];})};
+  setTablaRows(rows);
+}
+
+// ── Reporte 7: Plantel completo ───────────────────────────────────
+function rptJugadores() {
+  var catF = document.getElementById('rCat').value;
+  var jug = DB.jugadores.slice(1).filter(function(f){
+    var a=f[COL.ACTIVO]; return a===true||String(a).toLowerCase()==='si';
+  });
+  if (catF) jug=jug.filter(function(f){return f[COL.CATEGORIA_APP]===catF;});
+
+  setCards([
+    {val:jug.length,lbl:'Activos',color:'var(--verde)'},
+    {val:jug.filter(function(f){return f[COL.LIGA]==='AFA';}).length,lbl:'AFA',color:'var(--dorado)'},
+    {val:jug.filter(function(f){return f[COL.LIGA]==='Futsala';}).length,lbl:'Futsala',color:'#7ab8e8'},
+    {val:jug.filter(function(f){var sc=String(f[COL.SOCIO_CLUB]||'').toLowerCase();return sc==='si';}).length,lbl:'Socios club',color:'#9b8fe8'}
+  ]);
+  setTablaHeaders(['Socio','DNI','Nac.','Categoria','Plan','Liga','Socio club','Estado cuota']);
+  var rows=jug.map(function(f){
+    var cv=estadoCuotaV2(f);
+    var nom=(f[COL.APELLIDO]||'')+', '+(f[COL.NOMBRE]||'');
+    var estCls=cv.estado==='ok'||cv.estado==='vence'?'ok':cv.estado==='debe'?'debe':'';
+    var estLbl=cv.estado==='ok'?'Al dia':cv.estado==='debe'?'DEBE':cv.estado==='vence'?'Por vencer':cv.estado==='parcial'?'Parcial':'Sin plan';
+    return '<tr>'+td(nom.toUpperCase())+td(f[COL.DNI]||'-')+td(f[COL.FECHA_NAC]||'-')+
+      td(f[COL.CATEGORIA_APP]||'-')+td(f[COL.PLAN]||'-')+td(f[COL.LIGA]||'-')+
+      td(String(f[COL.SOCIO_CLUB]||'No'))+td(estLbl,estCls)+'</tr>';
+  });
+  window._rptData={headers:['Socio','DNI','Nac.','Categoria','Plan','Liga','Socio club','Estado cuota'],
+    rows:jug.map(function(f){var cv=estadoCuotaV2(f);return[(f[COL.APELLIDO]||'')+' '+(f[COL.NOMBRE]||''),f[COL.DNI]||'',f[COL.FECHA_NAC]||'',f[COL.CATEGORIA_APP]||'',f[COL.PLAN]||'',f[COL.LIGA]||'',f[COL.SOCIO_CLUB]||'No',cv.estado];})};
+  setTablaRows(rows);
+}
+
+// ── Exportar CSV ──────────────────────────────────────────────────
+function exportarReporteCSV() {
+  if (!window._rptData) return;
+  var lines = [window._rptData.headers.join(',')];
+  window._rptData.rows.forEach(function(row){
+    lines.push(row.map(function(v){
+      var s=String(v||'').replace(/"/g,'""');
+      return s.includes(',')||s.includes('"')?'"'+s+'"':s;
+    }).join(','));
+  });
+  var blob = new Blob(['﻿'+lines.join('
+')],{type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href=url; a.download='reporte_excursionistas.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function ofrecerEnvioComprobante(datos) {
   if(!datos) return;
   var email = (datos.email||'');
@@ -1809,3 +2142,59 @@ function olvidarHuella() {
 </script>
 </body>
 </html>
+
+<!-- ══ REPORTES ══════════════════════════════════════════════ -->
+<div id="sec-reportes" style="display:none;">
+  <div class="section-box">
+
+    <!-- Filtros globales -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:flex-end;">
+      <div class="filter-group">
+        <label class="filter-label">Reporte</label>
+        <select id="rTipo" class="filter-select" onchange="renderReporte()">
+          <option value="pagos_mes">Pagos por mes</option>
+          <option value="deudores">Jugadores que deben</option>
+          <option value="al_dia">Jugadores al dia</option>
+          <option value="tipo_pago">Por tipo de pago</option>
+          <option value="asistencia">Asistencia por jugador</option>
+          <option value="ranking_asist">Ranking de asistencia</option>
+          <option value="jugadores">Plantel completo</option>
+        </select>
+      </div>
+      <div class="filter-group" id="r-filter-mes">
+        <label class="filter-label">Mes</label>
+        <select id="rMes" class="filter-select" onchange="renderReporte()"></select>
+      </div>
+      <div class="filter-group" id="r-filter-tipo">
+        <label class="filter-label">Tipo de plan</label>
+        <select id="rTipoPlan" class="filter-select" onchange="renderReporte()">
+          <option value="">Todos</option>
+          <option value="actividad">Solo Actividad</option>
+          <option value="social">Solo Social</option>
+        </select>
+      </div>
+      <div class="filter-group" id="r-filter-cat">
+        <label class="filter-label">Categoria</label>
+        <select id="rCat" class="filter-select" onchange="renderReporte()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary" onclick="exportarReporteCSV()" style="height:36px;">
+        &#x2193; Exportar CSV
+      </button>
+    </div>
+
+    <!-- Resumen tarjetas -->
+    <div id="r-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+    <!-- Tabla -->
+    <div id="r-tabla-wrap" style="overflow-x:auto;">
+      <table id="r-tabla" style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead id="r-thead" style="background:var(--bg);"></thead>
+        <tbody id="r-tbody"></tbody>
+      </table>
+    </div>
+    <div id="r-empty" style="display:none;text-align:center;padding:40px;color:var(--muted);">Sin datos para mostrar</div>
+
+  </div>
+</div>
