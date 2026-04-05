@@ -1767,7 +1767,7 @@ function cambiarTab(ev,id){
   if(id==='reportes'){iniciarReportes();}
 }
 </script>
-<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.7</div>
+<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(10,13,10,.85);border:1px solid #1a7a3c;border-radius:6px;padding:3px 9px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:#c9a227;letter-spacing:.05em;pointer-events:none;">v1.8</div>
 
 <!-- PWA Install Banner -->
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
@@ -1867,8 +1867,10 @@ function iniciarReportes() {
   var _hoy=new Date();
   var _d=document.getElementById('rDesde');
   var _h=document.getElementById('rHasta');
-  if(_d&&!_d.value)_d.value=_hoy.getFullYear()+'-'+String(_hoy.getMonth()+1).padStart(2,'0')+'-01';
-  if(_h&&!_h.value)_h.value=_hoy.toISOString().split('T')[0];
+  var _primerDia=_hoy.getFullYear()+'-'+String(_hoy.getMonth()+1).padStart(2,'0')+'-01';
+  var _ultimoDia=new Date(_hoy.getFullYear(),_hoy.getMonth()+1,0).toISOString().split('T')[0];
+  if(_d&&!_d.value)_d.value=_primerDia;
+  if(_h&&!_h.value)_h.value=_ultimoDia;
   var _cf=document.getElementById('rCajaFecha');
   if(_cf&&!_cf.value)_cf.value=_hoy.toISOString().split('T')[0];
   renderReporte();
@@ -1877,8 +1879,8 @@ function iniciarReportes() {
 function renderReporte() {
   var tipo = document.getElementById('rTipo').value;
   // Mostrar/ocultar filtros según tipo
-  var showMes        = ['pagos_mes','tipo_pago'].indexOf(tipo) >= 0;
-  var showRango      = ['asistencia','ranking_asist'].indexOf(tipo) >= 0;
+  var showMes        = ['tipo_pago'].indexOf(tipo) >= 0;
+  var showRango      = ['asistencia','ranking_asist','pagos_mes'].indexOf(tipo) >= 0;
   var showCajaFecha  = tipo === 'caja_dia';
   var showTipo       = tipo === 'tipo_pago';
   var showCat        = ['deudores','al_dia','jugadores','asistencia'].indexOf(tipo) >= 0;
@@ -1935,9 +1937,9 @@ function td(txt, cls) { return '<td'+(cls?' class="'+cls+'"':'')+'>'+txt+'</td>'
 
 // ── Reporte 1: Pagos del mes ──────────────────────────────────────
 function rptPagosMes() {
-  var mes = getMesSeleccionado(); // "2026-04"
+  var rango = getRangoFechas();
   var pagos = CUOTAS_DB.cuotas.filter(function(c){
-    return (c[5]||'').substring(0,7) === mes;
+    return enRango(c[5]||'', rango.desde, rango.hasta);
   });
   var total = pagos.reduce(function(s,c){return s+Number(c[6]||0);},0);
   var actividad = pagos.filter(function(c){return !(c[2]||'').toString().toUpperCase().includes('SOCIAL');});
@@ -1974,7 +1976,7 @@ function rptPagosMes() {
      {label:'Social',data:dias.map(function(d){return porDia[d].soc;})}],
     'Recaudacion por dia');
   var _pd={};pagos.forEach(function(c){var _d=(c[5]||'').substring(8,10)||'?';if(!_pd[_d])_pd[_d]={a:0,s:0};if((c[2]||'').toUpperCase().includes('SOCIAL'))_pd[_d].s+=Number(c[6]||0);else _pd[_d].a+=Number(c[6]||0);});
-  var _ds=Object.keys(_pd).sort();renderGrafico('bar',_ds.map(function(d){return 'Dia '+d;}),[{label:'Actividad',data:_ds.map(function(d){return _pd[d].a;})},{label:'Social',data:_ds.map(function(d){return _pd[d].s;})}],'Recaudacion por dia');
+  var _ds=Object.keys(_pd).sort();var _titulo=rango.desde&&rango.hasta?'Del '+rango.desde+' al '+rango.hasta:'Recaudacion del periodo';renderGrafico('bar',_ds.map(function(d){return 'Dia '+d;}),[{label:'Actividad',data:_ds.map(function(d){return _pd[d].a;})},{label:'Social',data:_ds.map(function(d){return _pd[d].s;})}],_titulo);
 }
 
 // ── Reporte 2: Deudores ───────────────────────────────────────────
@@ -2545,7 +2547,7 @@ function olvidarHuella() {
       <div class="filter-group">
         <label class="filter-label">Reporte</label>
         <select id="rTipo" class="filter-select" onchange="renderReporte()">
-          <option value="pagos_mes">Pagos por mes</option>
+          <option value="pagos_mes">Pagos del periodo</option>
           <option value="deudores">Jugadores que deben</option>
           <option value="al_dia">Jugadores al dia</option>
           <option value="tipo_pago">Por tipo de pago</option>
